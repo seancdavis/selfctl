@@ -1,6 +1,8 @@
-import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
+import { neon } from '@netlify/neon'
 import * as schema from '../../../db/schema'
 
-const sql = neon(process.env.NETLIFY_DATABASE_URL!)
+const sql = neon()
 export const db = drizzle(sql, { schema })
+
+export { schema }

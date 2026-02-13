@@ -6,3 +6,6 @@
 [dev]
   command = "npm run dev"
   targetPort = 5173
+
+# Redirects are generated dynamically via generate-redirects script
+# to support environment variable interpolation for the Neon Auth proxy
