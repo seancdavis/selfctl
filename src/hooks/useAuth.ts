@@ -29,28 +29,45 @@ export function useAuthProvider(): AuthContextValue {
 
   const fetchSession = useCallback(async () => {
     try {
-      const { data } = await authClient.getSession()
-      setUser(data?.user ?? null)
+      // Try Neon Auth session first
+      try {
+        const { data } = await authClient.getSession()
 
-      if (data?.user?.id && data?.user?.email) {
-        setApiUser({ id: data.user.id, email: data.user.email })
+        if (data?.user?.id && data?.user?.email) {
+          setUser(data.user as User)
+          setApiUser({ id: data.user.id, email: data.user.email })
 
-        const authResponse = await fetch('/api/auth-check', {
-          headers: {
-            'x-user-id': data.user.id,
-            'x-user-email': data.user.email,
-          },
-        })
-        const authData = await authResponse.json()
-        setAuthenticated(true)
-        setApproved(authData.approved ?? false)
-      } else {
-        setApiUser(null)
-        setAuthenticated(false)
-        setApproved(false)
+          const authResponse = await fetch('/api/auth-check', {
+            headers: {
+              'x-user-id': data.user.id,
+              'x-user-email': data.user.email,
+            },
+          })
+          const authData = await authResponse.json()
+          setAuthenticated(true)
+          setApproved(authData.approved ?? false)
+          return
+        }
+      } catch {
+        // Neon Auth unavailable — fall through to bypass check
       }
-    } catch (error) {
-      console.error('Failed to fetch session:', error)
+
+      // No Neon Auth session — check if server has auth bypass enabled
+      try {
+        const authResponse = await fetch('/api/auth-check')
+        const authData = await authResponse.json()
+
+        if (authData.bypass && authData.user) {
+          setUser(authData.user)
+          setApiUser({ id: authData.user.id, email: authData.user.email })
+          setAuthenticated(true)
+          setApproved(true)
+          return
+        }
+      } catch {
+        // auth-check unavailable
+      }
+
       setUser(null)
       setApiUser(null)
       setAuthenticated(false)

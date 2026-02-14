@@ -9,6 +9,10 @@ interface AuthResult {
 }
 
 export async function requireAuth(req: Request): Promise<AuthResult> {
+  if (process.env.BYPASS_AUTH === 'true') {
+    return { authenticated: true, userId: 'dev', email: 'dev@localhost' }
+  }
+
   const userId = req.headers.get('x-user-id')
   const email = req.headers.get('x-user-email')
 
