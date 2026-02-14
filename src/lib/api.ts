@@ -59,7 +59,7 @@ export const api = {
 // Health API
 export const healthApi = {
   getWeightEntries: (days = 90) =>
-    request<{ data: WeightEntry[] }>(`/health-weight?days=${days}`).then(r => r.data),
+    request<WeightEntry[]>(`/health-weight?days=${days}`),
 }
 
 // Weeks API
