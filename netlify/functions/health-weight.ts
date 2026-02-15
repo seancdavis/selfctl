@@ -17,14 +17,18 @@ export default async (req: Request) => {
   const url = new URL(req.url)
   const days = parseInt(url.searchParams.get('days') || '90', 10)
 
-  const since = new Date()
-  since.setDate(since.getDate() - days)
-
-  const entries = await db
+  let query = db
     .select()
     .from(schema.weightEntries)
-    .where(gte(schema.weightEntries.recordedAt, since))
-    .orderBy(desc(schema.weightEntries.recordedAt))
+    .$dynamic()
+
+  if (days > 0) {
+    const since = new Date()
+    since.setDate(since.getDate() - days)
+    query = query.where(gte(schema.weightEntries.recordedAt, since))
+  }
+
+  const entries = await query.orderBy(desc(schema.weightEntries.recordedAt))
 
   const data = entries.map((entry) => ({
     id: entry.id,

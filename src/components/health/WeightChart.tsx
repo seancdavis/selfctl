@@ -7,23 +7,17 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts'
-import type { WeightEntry } from '@/types'
 
-interface WeightChartProps {
-  data: WeightEntry[]
+interface ChartEntry {
+  label: string
+  weight: number
 }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+interface WeightChartProps {
+  data: ChartEntry[]
 }
 
 export function WeightChart({ data }: WeightChartProps) {
-  const chartData = data.map((entry) => ({
-    date: formatDate(entry.recordedAt),
-    weight: entry.weight,
-  }))
-
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
@@ -31,10 +25,10 @@ export function WeightChart({ data }: WeightChartProps) {
       </h3>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
+          <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis
-              dataKey="date"
+              dataKey="label"
               tick={{ fontSize: 12, fill: '#6b7280' }}
               tickLine={false}
             />
