@@ -134,10 +134,13 @@ function WeightTrendWidget() {
     )
   }
 
-  const latest = entries[entries.length - 1]
-  const oldest = entries[0]
+  const sorted = [...entries].sort(
+    (a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime()
+  )
+  const latest = sorted[sorted.length - 1]
+  const oldest = sorted[0]
   const change = latest.weight - oldest.weight
-  const chartData = entries.map((e) => ({
+  const chartData = sorted.map((e) => ({
     date: formatDate(e.recordedAt),
     weight: e.weight,
   }))
