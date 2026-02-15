@@ -74,6 +74,11 @@ export function Backlog() {
                         {category.name}
                       </span>
                     )}
+                    {item.tags?.length > 0 && item.tags.map((tag) => (
+                      <span key={tag} className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400/70 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                        {tag}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )

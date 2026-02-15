@@ -127,6 +127,7 @@ export default async (req: Request, context: Context) => {
         title?: string
         categoryId?: number | null
         contentMarkdown?: string | null
+        tags?: string[]
         priority?: number
       }
       try {
@@ -147,6 +148,7 @@ export default async (req: Request, context: Context) => {
 
       if (body.title !== undefined) updates.title = body.title
       if (body.categoryId !== undefined) updates.categoryId = body.categoryId
+      if (body.tags !== undefined) updates.tags = body.tags
       if (body.priority !== undefined) updates.priority = body.priority
       if (body.contentMarkdown !== undefined) {
         updates.contentMarkdown = body.contentMarkdown
@@ -209,6 +211,7 @@ export default async (req: Request, context: Context) => {
       title: string
       categoryId?: number | null
       contentMarkdown?: string | null
+      tags?: string[]
       priority?: number
     }
     try {
@@ -232,6 +235,7 @@ export default async (req: Request, context: Context) => {
         categoryId: body.categoryId || null,
         contentMarkdown: body.contentMarkdown || null,
         contentHtml,
+        tags: body.tags || [],
         priority: body.priority ?? 0,
       })
       .returning()

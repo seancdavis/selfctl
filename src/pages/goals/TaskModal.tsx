@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { AutoResizeTextarea } from '@/components/ui/AutoResizeTextarea'
 import { NotesSection } from '@/components/goals/NotesSection'
+import { TagSelector } from '@/components/goals/TagSelector'
 import { useCategories } from '@/contexts/CategoriesContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -33,6 +34,7 @@ export function TaskModal() {
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState<string>('')
   const [content, setContent] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [task, setTask] = useState<TaskWithCategory | null>(null)
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -55,6 +57,7 @@ export function TaskModal() {
       setTitle(t.title)
       setCategoryId(t.categoryId ? String(t.categoryId) : '')
       setContent(t.contentMarkdown ?? '')
+      setSelectedTags(t.tags ?? [])
       setLoading(false)
     }).catch(() => {
       toast.error('failed to load task')
@@ -73,6 +76,7 @@ export function TaskModal() {
       title: title.trim(),
       categoryId: categoryId ? Number(categoryId) : null,
       contentMarkdown: content.trim() || null,
+      tags: selectedTags,
     }
 
     try {
@@ -191,6 +195,11 @@ export function TaskModal() {
                 </option>
               ))}
             </select>
+            <TagSelector
+              categoryId={categoryId ? Number(categoryId) : null}
+              selectedTags={selectedTags}
+              onChange={setSelectedTags}
+            />
             <AutoResizeTextarea
               value={content}
               onChange={(e) => setContent(e.target.value)}

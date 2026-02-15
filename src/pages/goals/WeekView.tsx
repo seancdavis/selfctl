@@ -187,6 +187,11 @@ export function WeekView() {
                     >
                       {task.title}
                     </span>
+                    {task.tags?.length > 0 && task.tags.map((tag) => (
+                      <span key={tag} className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400/70 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                        {tag}
+                      </span>
+                    ))}
                     {task.isRecurring && (
                       <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
                         recurring

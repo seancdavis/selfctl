@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { AutoResizeTextarea } from '@/components/ui/AutoResizeTextarea'
 import { NotesSection } from '@/components/goals/NotesSection'
+import { TagSelector } from '@/components/goals/TagSelector'
 import { useCategories } from '@/contexts/CategoriesContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -31,6 +32,7 @@ export function BacklogModal() {
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState<string>('')
   const [content, setContent] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [item, setItem] = useState<BacklogItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -59,6 +61,7 @@ export function BacklogModal() {
       setTitle(b.title)
       setCategoryId(b.categoryId ? String(b.categoryId) : '')
       setContent(b.contentMarkdown ?? '')
+      setSelectedTags(b.tags ?? [])
       setLoading(false)
     }).catch(() => {
       toast.error('failed to load item')
@@ -77,6 +80,7 @@ export function BacklogModal() {
       title: title.trim(),
       categoryId: categoryId ? Number(categoryId) : null,
       contentMarkdown: content.trim() || null,
+      tags: selectedTags,
     }
 
     try {
@@ -163,6 +167,11 @@ export function BacklogModal() {
                 </option>
               ))}
             </select>
+            <TagSelector
+              categoryId={categoryId ? Number(categoryId) : null}
+              selectedTags={selectedTags}
+              onChange={setSelectedTags}
+            />
             <AutoResizeTextarea
               value={content}
               onChange={(e) => setContent(e.target.value)}

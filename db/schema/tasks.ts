@@ -8,6 +8,7 @@ import {
   timestamp,
   pgEnum,
 } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import { weeks } from './weeks'
 import { categories } from './categories'
 
@@ -27,6 +28,7 @@ export const tasks = pgTable('tasks', {
   status: taskStatusEnum('status').notNull().default('pending'),
   isRecurring: boolean('is_recurring').notNull().default(false),
   stalenessCount: integer('staleness_count').notNull().default(0),
+  tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
   previousVersionId: integer('previous_version_id'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

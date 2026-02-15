@@ -54,6 +54,7 @@ export interface Task {
   status: TaskStatus
   isRecurring: boolean
   stalenessCount: number
+  tags: string[]
   previousVersionId: number | null
   createdAt: string
   updatedAt: string
@@ -100,9 +101,17 @@ export interface BacklogItem {
   title: string
   contentMarkdown: string | null
   contentHtml: string | null
+  tags: string[]
   priority: number
   createdAt: string
   updatedAt: string
+}
+
+export interface Tag {
+  id: number
+  name: string
+  categoryId: number
+  createdAt: string
 }
 
 export interface FollowUp {

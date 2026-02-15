@@ -3,6 +3,7 @@ import type {
   Task,
   TaskWithCategory,
   Category,
+  Tag,
   RecurringTask,
   Note,
   Attachment,
@@ -98,6 +99,16 @@ export const categoriesApi = {
     request<Category>(`/goals-categories/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) =>
     request<void>(`/goals-categories/${id}`, { method: 'DELETE' }),
+}
+
+// Tags API
+export const tagsApi = {
+  list: (categoryId?: number) =>
+    request<Tag[]>(categoryId ? `/goals-tags?categoryId=${categoryId}` : '/goals-tags'),
+  create: (data: { name: string; categoryId: number }) =>
+    request<Tag>('/goals-tags', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id: number) =>
+    request<void>(`/goals-tags/${id}`, { method: 'DELETE' }),
 }
 
 // Recurring Tasks API
