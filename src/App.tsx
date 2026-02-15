@@ -14,8 +14,10 @@ import { WeekWizard } from '@/pages/goals/WeekWizard'
 import { Backlog } from '@/pages/goals/Backlog'
 import { BacklogDetail } from '@/pages/goals/BacklogDetail'
 import { Recurring } from '@/pages/goals/Recurring'
+import { RecurringTaskModal } from '@/pages/goals/RecurringTaskModal'
 import { Categories } from '@/pages/goals/Categories'
 import { CategoriesProvider } from '@/contexts/CategoriesContext'
+import { ToastProvider } from '@/contexts/ToastContext'
 
 function OAuthCallbackHandler({ refetch }: { refetch: () => Promise<void> }) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -55,7 +57,10 @@ function AuthenticatedApp() {
           <Route path="/goals/weekly/:weekId/tasks/:taskId" element={<TaskDetail />} />
           <Route path="/goals/backlog" element={<Backlog />} />
           <Route path="/goals/backlog/:itemId" element={<BacklogDetail />} />
-          <Route path="/goals/recurring" element={<Recurring />} />
+          <Route path="/goals/recurring" element={<Recurring />}>
+            <Route path="new" element={<RecurringTaskModal />} />
+            <Route path=":taskId" element={<RecurringTaskModal />} />
+          </Route>
           <Route path="/settings/categories" element={<Categories />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -73,10 +78,12 @@ function AppContent() {
 
   return (
     <AuthContext.Provider value={authValue}>
-      <BrowserRouter>
-        <OAuthCallbackHandler refetch={authValue.refetch} />
-        <AuthenticatedApp />
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <OAuthCallbackHandler refetch={authValue.refetch} />
+          <AuthenticatedApp />
+        </BrowserRouter>
+      </ToastProvider>
     </AuthContext.Provider>
   )
 }

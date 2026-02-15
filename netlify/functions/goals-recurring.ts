@@ -4,6 +4,9 @@ import { db, schema } from './_shared/db.js'
 import { json, error, notFound, methodNotAllowed } from './_shared/response.js'
 import { renderMarkdown } from './_shared/markdown.js'
 import { requireAuth } from './_shared/auth.js'
+import { logger } from './_shared/logger.js'
+
+const log = logger('RECURRING')
 
 export default async (req: Request, context: Context) => {
   const auth = await requireAuth(req)
@@ -23,21 +26,27 @@ export default async (req: Request, context: Context) => {
     if (lastSegment === 'toggle') {
       if (req.method !== 'POST') return methodNotAllowed()
 
-      const [item] = await db
-        .select()
-        .from(schema.recurringTasks)
-        .where(eq(schema.recurringTasks.id, recurringId))
-        .limit(1)
+      try {
+        const [item] = await db
+          .select()
+          .from(schema.recurringTasks)
+          .where(eq(schema.recurringTasks.id, recurringId))
+          .limit(1)
 
-      if (!item) return notFound('Recurring task not found')
+        if (!item) return notFound('Recurring task not found')
 
-      const [updated] = await db
-        .update(schema.recurringTasks)
-        .set({ isActive: !item.isActive, updatedAt: new Date() })
-        .where(eq(schema.recurringTasks.id, recurringId))
-        .returning()
+        const [updated] = await db
+          .update(schema.recurringTasks)
+          .set({ isActive: !item.isActive, updatedAt: new Date() })
+          .where(eq(schema.recurringTasks.id, recurringId))
+          .returning()
 
-      return json(updated)
+        log.info('toggled task', { id: recurringId, isActive: updated.isActive })
+        return json(updated)
+      } catch (err) {
+        log.error('toggle failed', { id: recurringId, error: String(err) })
+        throw err
+      }
     }
 
     // GET /api/goals-recurring/:id
@@ -66,50 +75,62 @@ export default async (req: Request, context: Context) => {
         return error('Invalid JSON body')
       }
 
-      const [existing] = await db
-        .select()
-        .from(schema.recurringTasks)
-        .where(eq(schema.recurringTasks.id, recurringId))
-        .limit(1)
+      try {
+        const [existing] = await db
+          .select()
+          .from(schema.recurringTasks)
+          .where(eq(schema.recurringTasks.id, recurringId))
+          .limit(1)
 
-      if (!existing) return notFound('Recurring task not found')
+        if (!existing) return notFound('Recurring task not found')
 
-      const updates: Record<string, unknown> = { updatedAt: new Date() }
+        const updates: Record<string, unknown> = { updatedAt: new Date() }
 
-      if (body.title !== undefined) updates.title = body.title
-      if (body.categoryId !== undefined) updates.categoryId = body.categoryId
-      if (body.isActive !== undefined) updates.isActive = body.isActive
-      if (body.contentMarkdown !== undefined) {
-        updates.contentMarkdown = body.contentMarkdown
-        updates.contentHtml = body.contentMarkdown
-          ? await renderMarkdown(body.contentMarkdown)
-          : null
+        if (body.title !== undefined) updates.title = body.title
+        if (body.categoryId !== undefined) updates.categoryId = body.categoryId
+        if (body.isActive !== undefined) updates.isActive = body.isActive
+        if (body.contentMarkdown !== undefined) {
+          updates.contentMarkdown = body.contentMarkdown
+          updates.contentHtml = body.contentMarkdown
+            ? await renderMarkdown(body.contentMarkdown)
+            : null
+        }
+
+        const [updated] = await db
+          .update(schema.recurringTasks)
+          .set(updates)
+          .where(eq(schema.recurringTasks.id, recurringId))
+          .returning()
+
+        log.info('updated task', { id: recurringId, fields: Object.keys(updates).filter(k => k !== 'updatedAt') })
+        return json(updated)
+      } catch (err) {
+        log.error('update failed', { id: recurringId, error: String(err) })
+        throw err
       }
-
-      const [updated] = await db
-        .update(schema.recurringTasks)
-        .set(updates)
-        .where(eq(schema.recurringTasks.id, recurringId))
-        .returning()
-
-      return json(updated)
     }
 
     // DELETE /api/goals-recurring/:id
     if (req.method === 'DELETE') {
-      const [item] = await db
-        .select()
-        .from(schema.recurringTasks)
-        .where(eq(schema.recurringTasks.id, recurringId))
-        .limit(1)
+      try {
+        const [item] = await db
+          .select()
+          .from(schema.recurringTasks)
+          .where(eq(schema.recurringTasks.id, recurringId))
+          .limit(1)
 
-      if (!item) return notFound('Recurring task not found')
+        if (!item) return notFound('Recurring task not found')
 
-      await db
-        .delete(schema.recurringTasks)
-        .where(eq(schema.recurringTasks.id, recurringId))
+        await db
+          .delete(schema.recurringTasks)
+          .where(eq(schema.recurringTasks.id, recurringId))
 
-      return json({ success: true })
+        log.info('deleted task', { id: recurringId, title: item.title })
+        return json({ success: true })
+      } catch (err) {
+        log.error('delete failed', { id: recurringId, error: String(err) })
+        throw err
+      }
     }
 
     return methodNotAllowed()
@@ -138,21 +159,27 @@ export default async (req: Request, context: Context) => {
       return error('title is required')
     }
 
-    const contentHtml = body.contentMarkdown
-      ? await renderMarkdown(body.contentMarkdown)
-      : null
+    try {
+      const contentHtml = body.contentMarkdown
+        ? await renderMarkdown(body.contentMarkdown)
+        : null
 
-    const [item] = await db
-      .insert(schema.recurringTasks)
-      .values({
-        title: body.title,
-        categoryId: body.categoryId || null,
-        contentMarkdown: body.contentMarkdown || null,
-        contentHtml,
-      })
-      .returning()
+      const [item] = await db
+        .insert(schema.recurringTasks)
+        .values({
+          title: body.title,
+          categoryId: body.categoryId || null,
+          contentMarkdown: body.contentMarkdown || null,
+          contentHtml,
+        })
+        .returning()
 
-    return json(item, 201)
+      log.info('created task', { id: item.id, title: item.title })
+      return json(item, 201)
+    } catch (err) {
+      log.error('create failed', { title: body.title, error: String(err) })
+      throw err
+    }
   }
 
   return methodNotAllowed()

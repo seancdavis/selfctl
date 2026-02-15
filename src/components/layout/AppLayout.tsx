@@ -12,7 +12,9 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
         <main className="flex-1 p-6">
-          <Outlet />
+          <div className="max-w-6xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
