@@ -1,5 +1,5 @@
 import type { Config, Context } from '@netlify/functions'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, asc } from 'drizzle-orm'
 import { db, schema } from './_shared/db.js'
 import { json, error, notFound, methodNotAllowed } from './_shared/response.js'
 import { requireAuth } from './_shared/auth.js'
@@ -10,7 +10,35 @@ export default async (req: Request, context: Context) => {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { id, weekId } = context.params
+  const { id, weekId, reorderWeekId } = context.params
+  const url = new URL(req.url)
+  const pathSegments = url.pathname.split('/').filter(Boolean)
+  const lastSegment = pathSegments[pathSegments.length - 1]
+
+  // POST /api/goals-weeks/:reorderWeekId/reorder
+  if (reorderWeekId) {
+    if (req.method !== 'POST') return methodNotAllowed()
+
+    let body: { taskIds: number[] }
+    try {
+      body = await req.json()
+    } catch {
+      return error('Invalid JSON body')
+    }
+
+    if (!body.taskIds || !Array.isArray(body.taskIds)) {
+      return error('taskIds array is required')
+    }
+
+    for (let i = 0; i < body.taskIds.length; i++) {
+      await db
+        .update(schema.tasks)
+        .set({ sortOrder: i })
+        .where(eq(schema.tasks.id, body.taskIds[i]))
+    }
+
+    return json({ success: true })
+  }
 
   // GET /api/goals-weeks/:weekId/tasks
   if (weekId) {
@@ -24,6 +52,7 @@ export default async (req: Request, context: Context) => {
       .from(schema.tasks)
       .leftJoin(schema.categories, eq(schema.tasks.categoryId, schema.categories.id))
       .where(eq(schema.tasks.weekId, weekId))
+      .orderBy(asc(schema.tasks.sortOrder), asc(schema.tasks.id))
 
     return json(
       weekTasks.map((row) => ({
@@ -101,5 +130,5 @@ export default async (req: Request, context: Context) => {
 }
 
 export const config: Config = {
-  path: ['/api/goals-weeks', '/api/goals-weeks/:id', '/api/goals-weeks/:weekId/tasks'],
+  path: ['/api/goals-weeks', '/api/goals-weeks/:id', '/api/goals-weeks/:weekId/tasks', '/api/goals-weeks/:reorderWeekId/reorder'],
 }

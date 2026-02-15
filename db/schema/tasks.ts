@@ -29,6 +29,7 @@ export const tasks = pgTable('tasks', {
   isRecurring: boolean('is_recurring').notNull().default(false),
   stalenessCount: integer('staleness_count').notNull().default(0),
   tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+  sortOrder: integer('sort_order').notNull().default(0),
   previousVersionId: integer('previous_version_id'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

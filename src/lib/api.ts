@@ -71,6 +71,11 @@ export const weeksApi = {
     request<Week>('/goals-weeks', { method: 'POST', body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<void>(`/goals-weeks/${id}`, { method: 'DELETE' }),
+  reorder: (weekId: string, taskIds: number[]) =>
+    request<void>(`/goals-weeks/${weekId}/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ taskIds }),
+    }),
 }
 
 // Tasks API

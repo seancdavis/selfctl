@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate, Link, Outlet } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useCategories } from '@/contexts/CategoriesContext'
 import { weeksApi, tasksApi } from '@/lib/api'
@@ -42,6 +42,7 @@ export function WeekView() {
       return a.localeCompare(b)
     })
     for (const key of keys) {
+      // Tasks come pre-sorted by sortOrder from API
       sorted.set(key, groups.get(key)!)
     }
     return sorted
@@ -62,6 +63,64 @@ export function WeekView() {
       refetchTasks()
     }
   }, [setTasks, refetchTasks])
+
+  const handleMoveTask = useCallback(async (
+    taskId: number,
+    categoryKey: string,
+    direction: 'up' | 'down',
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation()
+    if (!tasks || !weekId) return
+
+    const categoryTasks = groupedTasks.get(categoryKey)
+    if (!categoryTasks) return
+
+    const idx = categoryTasks.findIndex((t) => t.id === taskId)
+    if (idx < 0) return
+    if (direction === 'up' && idx === 0) return
+    if (direction === 'down' && idx === categoryTasks.length - 1) return
+
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    const taskA = categoryTasks[idx]
+    const taskB = categoryTasks[swapIdx]
+
+    // Optimistically swap sortOrder values
+    const newTasks = tasks.map((t) => {
+      if (t.id === taskA.id) return { ...t, sortOrder: taskB.sortOrder }
+      if (t.id === taskB.id) return { ...t, sortOrder: taskA.sortOrder }
+      return t
+    })
+    setTasks(newTasks)
+
+    // Send full reorder — flatten all groups in display order with swapped positions
+    const allTaskIds: number[] = []
+    const newGrouped = new Map<string, TaskWithCategory[]>()
+    for (const t of newTasks) {
+      const key = t.category?.name ?? 'Uncategorized'
+      const existing = newGrouped.get(key) || []
+      existing.push(t)
+      newGrouped.set(key, existing)
+    }
+    const groupKeys = [...newGrouped.keys()].sort((a, b) => {
+      if (a === 'Uncategorized') return 1
+      if (b === 'Uncategorized') return -1
+      return a.localeCompare(b)
+    })
+    for (const key of groupKeys) {
+      const group = newGrouped.get(key)!
+      group.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id)
+      for (const t of group) {
+        allTaskIds.push(t.id)
+      }
+    }
+
+    try {
+      await weeksApi.reorder(weekId, allTaskIds)
+    } catch {
+      refetchTasks()
+    }
+  }, [tasks, weekId, groupedTasks, setTasks, refetchTasks])
 
   const loading = weekLoading || tasksLoading
   const error = weekError || tasksError
@@ -153,13 +212,15 @@ export function WeekView() {
               {category}
             </h2>
             <div className="bg-zinc-900 rounded-lg border border-zinc-800 divide-y divide-zinc-800">
-              {categoryTasks.map((task) => {
+              {categoryTasks.map((task, idx) => {
                 const stalenessClass = getStalenessClasses(task.stalenessCount)
+                const isFirst = idx === 0
+                const isLast = idx === categoryTasks.length - 1
                 return (
                   <div
                     key={task.id}
                     onClick={() => navigate(`/goals/weekly/${weekId}/tasks/${task.id}`)}
-                    className={`flex items-center gap-3 p-3 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
+                    className={`group flex items-center gap-3 p-3 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
                       stalenessClass ? `border-l-4 ${stalenessClass}` : ''
                     }`}
                   >
@@ -196,6 +257,27 @@ export function WeekView() {
                       <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
                         recurring
                       </span>
+                    )}
+                    {/* Reorder arrows — visible on hover */}
+                    {categoryTasks.length > 1 && (
+                      <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => handleMoveTask(task.id, category, 'up', e)}
+                          disabled={isFirst}
+                          className="p-0.5 text-zinc-600 hover:text-zinc-300 disabled:opacity-0 transition-colors"
+                          aria-label="Move up"
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => handleMoveTask(task.id, category, 'down', e)}
+                          disabled={isLast}
+                          className="p-0.5 text-zinc-600 hover:text-zinc-300 disabled:opacity-0 transition-colors"
+                          aria-label="Move down"
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 )

@@ -55,6 +55,7 @@ export interface Task {
   isRecurring: boolean
   stalenessCount: number
   tags: string[]
+  sortOrder: number
   previousVersionId: number | null
   createdAt: string
   updatedAt: string
