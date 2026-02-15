@@ -9,13 +9,14 @@ import { Dashboard } from '@/pages/Dashboard'
 import { Health } from '@/pages/health/Health'
 import { WeeklyGoals } from '@/pages/goals/WeeklyGoals'
 import { WeekView } from '@/pages/goals/WeekView'
-import { TaskDetail } from '@/pages/goals/TaskDetail'
+import { TaskModal } from '@/pages/goals/TaskModal'
 import { WeekWizard } from '@/pages/goals/WeekWizard'
 import { Backlog } from '@/pages/goals/Backlog'
-import { BacklogDetail } from '@/pages/goals/BacklogDetail'
+import { BacklogModal } from '@/pages/goals/BacklogModal'
 import { Recurring } from '@/pages/goals/Recurring'
 import { RecurringTaskModal } from '@/pages/goals/RecurringTaskModal'
 import { Categories } from '@/pages/goals/Categories'
+import { CategoryModal } from '@/pages/goals/CategoryModal'
 import { CategoriesProvider } from '@/contexts/CategoriesContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 
@@ -53,15 +54,22 @@ function AuthenticatedApp() {
           <Route path="/health" element={<Health />} />
           <Route path="/goals/weekly" element={<WeeklyGoals />} />
           <Route path="/goals/weekly/new" element={<WeekWizard />} />
-          <Route path="/goals/weekly/:weekId" element={<WeekView />} />
-          <Route path="/goals/weekly/:weekId/tasks/:taskId" element={<TaskDetail />} />
-          <Route path="/goals/backlog" element={<Backlog />} />
-          <Route path="/goals/backlog/:itemId" element={<BacklogDetail />} />
+          <Route path="/goals/weekly/:weekId" element={<WeekView />}>
+            <Route path="tasks/new" element={<TaskModal />} />
+            <Route path="tasks/:taskId" element={<TaskModal />} />
+          </Route>
+          <Route path="/goals/backlog" element={<Backlog />}>
+            <Route path="new" element={<BacklogModal />} />
+            <Route path=":itemId" element={<BacklogModal />} />
+          </Route>
           <Route path="/goals/recurring" element={<Recurring />}>
             <Route path="new" element={<RecurringTaskModal />} />
             <Route path=":taskId" element={<RecurringTaskModal />} />
           </Route>
-          <Route path="/settings/categories" element={<Categories />} />
+          <Route path="/settings/categories" element={<Categories />}>
+            <Route path="new" element={<CategoryModal />} />
+            <Route path=":id" element={<CategoryModal />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

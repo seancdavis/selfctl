@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useMemo, useCallback } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
+import { useParams, useNavigate, Link, Outlet } from 'react-router-dom'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useCategories } from '@/contexts/CategoriesContext'
 import { weeksApi, tasksApi } from '@/lib/api'
@@ -15,11 +15,6 @@ export function WeekView() {
   usePageTitle(weekId ? `Week ${weekId}` : 'Week')
   const navigate = useNavigate()
   const { data: categories } = useCategories()
-
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newTaskTitle, setNewTaskTitle] = useState('')
-  const [newTaskCategory, setNewTaskCategory] = useState<string>('')
-  const [addingTask, setAddingTask] = useState(false)
 
   const { data: week, loading: weekLoading, error: weekError } = useAsyncData<Week>(
     () => weeksApi.get(weekId!),
@@ -52,7 +47,8 @@ export function WeekView() {
     return sorted
   }, [tasks])
 
-  const handleToggleTask = useCallback(async (taskId: number) => {
+  const handleToggleTask = useCallback(async (taskId: number, e: React.MouseEvent) => {
+    e.stopPropagation()
     try {
       const updated = await tasksApi.toggleStatus(taskId)
       setTasks((prev) =>
@@ -66,29 +62,6 @@ export function WeekView() {
       refetchTasks()
     }
   }, [setTasks, refetchTasks])
-
-  const handleAddTask = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newTaskTitle.trim() || !weekId) return
-
-    setAddingTask(true)
-    try {
-      await tasksApi.create({
-        weekId,
-        title: newTaskTitle.trim(),
-        categoryId: newTaskCategory ? Number(newTaskCategory) : null,
-        status: 'pending',
-      })
-      setNewTaskTitle('')
-      setNewTaskCategory('')
-      setShowAddForm(false)
-      refetchTasks()
-    } catch {
-      // silent
-    } finally {
-      setAddingTask(false)
-    }
-  }
 
   const loading = weekLoading || tasksLoading
   const error = weekError || tasksError
@@ -185,12 +158,13 @@ export function WeekView() {
                 return (
                   <div
                     key={task.id}
-                    className={`flex items-center gap-3 p-3 ${
+                    onClick={() => navigate(`/goals/weekly/${weekId}/tasks/${task.id}`)}
+                    className={`flex items-center gap-3 p-3 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
                       stalenessClass ? `border-l-4 ${stalenessClass}` : ''
                     }`}
                   >
                     <button
-                      onClick={() => handleToggleTask(task.id)}
+                      onClick={(e) => handleToggleTask(task.id, e)}
                       className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
                         task.status === 'completed'
                           ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
@@ -204,16 +178,15 @@ export function WeekView() {
                         </svg>
                       )}
                     </button>
-                    <button
-                      onClick={() => navigate(`/goals/weekly/${weekId}/tasks/${task.id}`)}
-                      className={`flex-1 text-left text-sm font-mono transition-colors hover:text-blue-400 ${
+                    <span
+                      className={`flex-1 text-sm font-mono transition-colors ${
                         task.status === 'completed'
                           ? 'text-zinc-600 line-through'
                           : 'text-zinc-200'
                       }`}
                     >
                       {task.title}
-                    </button>
+                    </span>
                     {task.isRecurring && (
                       <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
                         recurring
@@ -229,69 +202,13 @@ export function WeekView() {
 
       {/* Add task */}
       <div className="mt-6">
-        {showAddForm ? (
-          <form
-            onSubmit={handleAddTask}
-            className="bg-zinc-900 rounded-lg border border-zinc-800 p-4"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-mono font-medium text-zinc-200">add task</h3>
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="text-zinc-600 hover:text-zinc-400 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                placeholder="task title"
-                className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                autoFocus
-              />
-              <select
-                value={newTaskCategory}
-                onChange={(e) => setNewTaskCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-              >
-                <option value="">no category</option>
-                {categories?.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="px-3 py-1.5 text-xs font-mono text-zinc-500 hover:text-zinc-300 transition-colors"
-                >
-                  cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!newTaskTitle.trim() || addingTask}
-                  className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium rounded hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
-                >
-                  {addingTask ? 'adding...' : 'add'}
-                </button>
-              </div>
-            </div>
-          </form>
-        ) : (
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-mono text-zinc-600 hover:text-zinc-400 border border-dashed border-zinc-700 rounded hover:border-zinc-600 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            add task
-          </button>
-        )}
+        <Link
+          to={`/goals/weekly/${weekId}/tasks/new`}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-mono text-zinc-600 hover:text-zinc-400 border border-dashed border-zinc-700 rounded hover:border-zinc-600 transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          add task
+        </Link>
       </div>
 
       {/* Back link */}
@@ -303,6 +220,8 @@ export function WeekView() {
           &larr; all weeks
         </Link>
       </div>
+
+      <Outlet context={{ refetchTasks, tasks, setTasks, weekId }} />
     </div>
   )
 }
