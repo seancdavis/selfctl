@@ -3,12 +3,21 @@ import {
   LayoutDashboard,
   Activity,
   Target,
+  CalendarCheck,
   ListTodo,
   RotateCcw,
   FolderOpen,
 } from 'lucide-react'
+import { getCurrentWeekId } from '@/lib/dates'
 
-const navSections = [
+interface NavItem {
+  to: string
+  label: string
+  icon: typeof LayoutDashboard
+  isActive?: (pathname: string) => boolean
+}
+
+const navSections: { label?: string; items: NavItem[] }[] = [
   {
     items: [
       { to: '/', label: 'dashboard', icon: LayoutDashboard },
@@ -23,7 +32,18 @@ const navSections = [
   {
     label: 'tasks',
     items: [
-      { to: '/goals/weekly', label: 'weekly', icon: Target },
+      {
+        to: '/goals/weekly/current',
+        label: 'this week',
+        icon: CalendarCheck,
+        isActive: (p) => p.startsWith(`/goals/weekly/${getCurrentWeekId()}`),
+      },
+      {
+        to: '/goals/weekly',
+        label: 'all weeks',
+        icon: Target,
+        isActive: (p) => p === '/goals/weekly' || p === '/goals/weekly/new',
+      },
       { to: '/goals/backlog', label: 'backlog', icon: ListTodo },
       { to: '/goals/recurring', label: 'recurring', icon: RotateCcw },
     ],
@@ -39,9 +59,10 @@ const navSections = [
 export function Sidebar() {
   const location = useLocation()
 
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/'
-    return location.pathname.startsWith(path)
+  const checkActive = (item: NavItem) => {
+    if (item.isActive) return item.isActive(location.pathname)
+    if (item.to === '/') return location.pathname === '/'
+    return location.pathname.startsWith(item.to)
   }
 
   return (
@@ -63,18 +84,18 @@ export function Sidebar() {
               </p>
             )}
             <div className="space-y-0.5">
-              {section.items.map(({ to, label, icon: Icon }) => (
+              {section.items.map((item) => (
                 <Link
-                  key={to}
-                  to={to}
+                  key={item.to}
+                  to={item.to}
                   className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-sm font-mono font-medium transition-colors ${
-                    isActive(to)
+                    checkActive(item)
                       ? 'bg-zinc-800 text-emerald-400 border border-zinc-700'
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
+                  <item.icon className="w-3.5 h-3.5" />
+                  {item.label}
                 </Link>
               ))}
             </div>

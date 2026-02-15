@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom'
 import { AuthContext, useAuthProvider, useAuth } from '@/hooks/useAuth'
 import { PageLoader } from '@/components/LoadingSpinner'
 import { AppLayout } from '@/components/layout/AppLayout'
@@ -19,6 +19,15 @@ import { Categories } from '@/pages/goals/Categories'
 import { CategoryModal } from '@/pages/goals/CategoryModal'
 import { CategoriesProvider } from '@/contexts/CategoriesContext'
 import { ToastProvider } from '@/contexts/ToastContext'
+import { getCurrentWeekId } from '@/lib/dates'
+
+function CurrentWeekRedirect() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    navigate(`/goals/weekly/${getCurrentWeekId()}`, { replace: true })
+  }, [navigate])
+  return null
+}
 
 function OAuthCallbackHandler({ refetch }: { refetch: () => Promise<void> }) {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -53,6 +62,7 @@ function AuthenticatedApp() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/health" element={<Health />} />
           <Route path="/goals/weekly" element={<WeeklyGoals />} />
+          <Route path="/goals/weekly/current" element={<CurrentWeekRedirect />} />
           <Route path="/goals/weekly/new" element={<WeekWizard />} />
           <Route path="/goals/weekly/:weekId" element={<WeekView />}>
             <Route path="tasks/new" element={<TaskModal />} />
