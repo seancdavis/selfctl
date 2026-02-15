@@ -133,7 +133,7 @@ export function WeekWizard() {
 
   const initialized = useState(false)
   if (wizardData && !initialized[0]) {
-    const recurringIds = new Set(wizardData.recurringTasks.filter((t) => t.selected).map((t) => t.id))
+    const recurringIds = new Set(wizardData.recurringTasks.map((t) => t.id))
     const incompleteIds = new Set(wizardData.incompleteTasks.filter((t) => t.selected).map((t) => t.id))
     const followUpIds = new Set(wizardData.followUps.filter((t) => t.selected).map((t) => t.id))
     const backlogIds = new Set(wizardData.backlogItems.filter((t) => t.selected).map((t) => t.id))
@@ -210,7 +210,7 @@ export function WeekWizard() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div>
       {/* Back link */}
       <Link
         to="/goals/weekly"
