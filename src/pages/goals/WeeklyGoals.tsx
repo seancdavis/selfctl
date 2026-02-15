@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -52,6 +53,7 @@ function WeekCard({ week, isCurrent }: { week: Week; isCurrent: boolean }) {
 }
 
 export function WeeklyGoals() {
+  usePageTitle('Weekly Goals')
   const { data: weeks, loading, error } = useAsyncData<Week[]>(() => weeksApi.list(), [])
   const currentWeekId = getCurrentWeekId()
 

@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Plus, X, Pencil, Trash2, Check } from 'lucide-react'
 import { useCategories } from '@/contexts/CategoriesContext'
 import { categoriesApi } from '@/lib/api'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 
 export function Categories() {
+  usePageTitle('Categories')
   const { data: categories, loading, error, refetch } = useCategories()
 
   const [showAddForm, setShowAddForm] = useState(false)

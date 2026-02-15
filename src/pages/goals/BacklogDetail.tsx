@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -8,6 +9,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { BacklogItem, Note, Week } from '@/types'
 
 export function BacklogDetail() {
+  usePageTitle('Backlog Item')
   const { itemId } = useParams<{ itemId: string }>()
   const navigate = useNavigate()
   const { data: categories } = useCategories()

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Plus, X, Pause, Play, Trash2, Pencil } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useCategories } from '@/contexts/CategoriesContext'
@@ -7,6 +8,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { RecurringTask } from '@/types'
 
 export function Recurring() {
+  usePageTitle('Recurring Tasks')
   const { data: categories } = useCategories()
   const { data: tasks, loading, error, refetch } = useAsyncData<RecurringTask[]>(
     () => recurringTasksApi.list(),

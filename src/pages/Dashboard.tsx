@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Link } from 'react-router-dom'
 import {
   ResponsiveContainer,
@@ -268,6 +269,7 @@ function QuickActions() {
 }
 
 export function Dashboard() {
+  usePageTitle()
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>

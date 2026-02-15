@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { Link } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -8,6 +9,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { BacklogItem } from '@/types'
 
 export function Backlog() {
+  usePageTitle('Backlog')
   const { data: categories } = useCategories()
   const { data: items, loading, error, refetch } = useAsyncData<BacklogItem[]>(
     () => backlogApi.list(),

@@ -45,9 +45,9 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <Link to="/" className="text-lg font-semibold text-gray-900">
+    <aside className="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <Link to="/" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Dashboard
         </Link>
       </div>
@@ -56,7 +56,7 @@ export function Sidebar() {
         {navSections.map((section, i) => (
           <div key={i}>
             {section.label && (
-              <p className="px-3 mb-1 text-xs font-medium text-gray-400 uppercase tracking-wider">
+              <p className="px-3 mb-1 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                 {section.label}
               </p>
             )}
@@ -67,8 +67,8 @@ export function Sidebar() {
                   to={to}
                   className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(to)
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                   }`}
                 >
                   <Icon className="w-4 h-4" />

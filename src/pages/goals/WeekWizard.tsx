@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -98,6 +99,7 @@ function WizardSection<T extends { id: number; title: string; selected: boolean 
 }
 
 export function WeekWizard() {
+  usePageTitle('New Week')
   const navigate = useNavigate()
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)

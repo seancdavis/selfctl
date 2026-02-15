@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { healthApi } from '@/lib/api'
 import { getWeightStats } from '@/lib/health-stats'
@@ -215,6 +216,7 @@ function EntriesTable({
 }
 
 export function Health() {
+  usePageTitle('Weight & Body')
   const [selected, setSelected] = useState('1M')
   const period = TIME_PERIODS.find((p) => p.label === selected)!
 

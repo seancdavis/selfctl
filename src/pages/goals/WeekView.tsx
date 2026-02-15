@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -11,6 +12,7 @@ import type { Week, TaskWithCategory } from '@/types'
 
 export function WeekView() {
   const { weekId } = useParams<{ weekId: string }>()
+  usePageTitle(weekId ? `Week ${weekId}` : 'Week')
   const navigate = useNavigate()
   const { data: categories } = useCategories()
 

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Trash2, ArrowLeft } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
@@ -11,6 +12,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { TaskWithCategory, Note } from '@/types'
 
 export function TaskDetail() {
+  usePageTitle('Task')
   const { weekId, taskId } = useParams<{ weekId: string; taskId: string }>()
   const navigate = useNavigate()
 
