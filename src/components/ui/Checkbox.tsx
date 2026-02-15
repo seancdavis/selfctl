@@ -15,13 +15,13 @@ export function Checkbox({ checked, onChange, disabled = false, className = '' }
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-40 ${
         checked
-          ? 'border-blue-600 bg-blue-600 text-white'
-          : 'border-gray-300 bg-white'
+          ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400'
+          : 'border-zinc-600 bg-zinc-900 hover:border-zinc-500'
       } ${className}`}
     >
-      {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+      {checked && <Check className="h-3 w-3" strokeWidth={3} />}
     </button>
   )
 }

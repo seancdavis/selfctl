@@ -111,23 +111,23 @@ function aggregateEntries(
 }
 
 function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
+  return <div className={`animate-pulse bg-zinc-800 rounded ${className}`} />
 }
 
 function LoadingState() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-6">
-            <Skeleton className="h-4 w-24 mb-3" />
-            <Skeleton className="h-8 w-20 mb-2" />
+          <div key={i} className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
+            <Skeleton className="h-3 w-24 mb-3" />
+            <Skeleton className="h-7 w-20 mb-2" />
             <Skeleton className="h-3 w-16" />
           </div>
         ))}
       </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <Skeleton className="h-4 w-28 mb-4" />
+      <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
+        <Skeleton className="h-3 w-28 mb-4" />
         <Skeleton className="h-80 w-full" />
       </div>
     </div>
@@ -136,10 +136,10 @@ function LoadingState() {
 
 function EmptyState() {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-      <p className="text-gray-500 text-lg">No weight data yet.</p>
-      <p className="text-gray-400 text-sm mt-2">
-        Sync your data from Health Auto Export to see your weight trends here.
+    <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-12 text-center">
+      <p className="text-zinc-500 text-sm font-mono">no weight data available</p>
+      <p className="text-zinc-700 text-xs font-mono mt-2">
+        sync data from Health Auto Export to populate
       </p>
     </div>
   )
@@ -157,30 +157,30 @@ function EntriesTable({
   const periodWord = aggregation === 'weekly' ? 'Week' : 'Month'
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+    <div className="bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden">
+      <div className="px-5 py-4 border-b border-zinc-800">
+        <h3 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest">
           {isAggregated ? `${periodWord}ly Averages` : 'Entries'}
         </h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-100">
-              <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+            <tr className="border-b border-zinc-800">
+              <th className="text-left text-[10px] font-mono font-medium text-zinc-600 uppercase tracking-widest px-5 py-3">
                 {isAggregated ? periodWord : 'Date'}
               </th>
-              <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+              <th className="text-right text-[10px] font-mono font-medium text-zinc-600 uppercase tracking-widest px-5 py-3">
                 {isAggregated ? 'Avg Weight' : 'Weight'}
               </th>
-              <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+              <th className="text-right text-[10px] font-mono font-medium text-zinc-600 uppercase tracking-widest px-5 py-3">
                 {isAggregated ? 'Avg Body Fat' : 'Body Fat'}
               </th>
-              <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+              <th className="text-right text-[10px] font-mono font-medium text-zinc-600 uppercase tracking-widest px-5 py-3">
                 {isAggregated ? 'Avg BMI' : 'BMI'}
               </th>
               {isAggregated && (
-                <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+                <th className="text-right text-[10px] font-mono font-medium text-zinc-600 uppercase tracking-widest px-5 py-3">
                   Entries
                 </th>
               )}
@@ -188,21 +188,21 @@ function EntriesTable({
           </thead>
           <tbody>
             {reversed.map((entry, i) => (
-              <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="px-6 py-3 text-sm text-gray-900">
+              <tr key={i} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                <td className="px-5 py-2.5 text-sm font-mono text-zinc-300">
                   {entry.label}
                 </td>
-                <td className="px-6 py-3 text-sm text-gray-900 text-right">
+                <td className="px-5 py-2.5 text-sm font-mono text-zinc-200 text-right">
                   {entry.weight} lbs
                 </td>
-                <td className="px-6 py-3 text-sm text-gray-900 text-right">
+                <td className="px-5 py-2.5 text-sm font-mono text-zinc-400 text-right">
                   {entry.bodyFatPercentage != null ? `${entry.bodyFatPercentage}%` : '--'}
                 </td>
-                <td className="px-6 py-3 text-sm text-gray-900 text-right">
+                <td className="px-5 py-2.5 text-sm font-mono text-zinc-400 text-right">
                   {entry.bmi != null ? entry.bmi : '--'}
                 </td>
                 {isAggregated && (
-                  <td className="px-6 py-3 text-sm text-gray-400 text-right">
+                  <td className="px-5 py-2.5 text-sm font-mono text-zinc-600 text-right">
                     {entry.count}
                   </td>
                 )}
@@ -216,7 +216,7 @@ function EntriesTable({
 }
 
 export function Health() {
-  usePageTitle('Weight & Body')
+  usePageTitle('Vitals')
   const [selected, setSelected] = useState('1M')
   const period = TIME_PERIODS.find((p) => p.label === selected)!
 
@@ -246,18 +246,20 @@ export function Health() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Weight & Body</h1>
-          <p className="text-gray-500 mt-1">Weight and body composition tracking.</p>
+          <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2">
+            <span className="text-emerald-400">$</span> vitals::weight
+          </h1>
+          <p className="text-xs font-mono text-zinc-600 mt-1">weight and body composition tracking</p>
         </div>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center gap-0.5 bg-zinc-900 border border-zinc-800 rounded p-0.5">
           {TIME_PERIODS.map((p) => (
             <button
               key={p.label}
               onClick={() => setSelected(p.label)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-xs font-mono font-medium rounded transition-colors ${
                 selected === p.label
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-zinc-800 text-emerald-400 border border-zinc-700'
+                  : 'text-zinc-600 hover:text-zinc-400 border border-transparent'
               }`}
             >
               {p.label}
@@ -267,19 +269,19 @@ export function Health() {
       </div>
 
       {error && (
-        <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+        <div className="mt-6 bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-sm font-mono">
           {error}
         </div>
       )}
 
-      <div className="mt-6 space-y-6">
+      <div className="mt-6 space-y-3">
         {loading ? (
           <LoadingState />
         ) : sortedData.length === 0 ? (
           <EmptyState />
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <StatCard
                 label="Current Weight"
                 value={stats.current}

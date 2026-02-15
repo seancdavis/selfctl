@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
-  Heart,
+  Activity,
   Target,
   ListTodo,
   RotateCcw,
@@ -11,27 +11,27 @@ import {
 const navSections = [
   {
     items: [
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/', label: 'dashboard', icon: LayoutDashboard },
     ],
   },
   {
-    label: 'Health',
+    label: 'vitals',
     items: [
-      { to: '/health', label: 'Weight & Body', icon: Heart },
+      { to: '/health', label: 'weight', icon: Activity },
     ],
   },
   {
-    label: 'Goals',
+    label: 'tasks',
     items: [
-      { to: '/goals/weekly', label: 'Weekly Goals', icon: Target },
-      { to: '/goals/backlog', label: 'Backlog', icon: ListTodo },
-      { to: '/goals/recurring', label: 'Recurring', icon: RotateCcw },
+      { to: '/goals/weekly', label: 'weekly', icon: Target },
+      { to: '/goals/backlog', label: 'backlog', icon: ListTodo },
+      { to: '/goals/recurring', label: 'recurring', icon: RotateCcw },
     ],
   },
   {
-    label: 'Settings',
+    label: 'config',
     items: [
-      { to: '/settings/categories', label: 'Categories', icon: FolderOpen },
+      { to: '/settings/categories', label: 'categories', icon: FolderOpen },
     ],
   },
 ]
@@ -45,10 +45,12 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <Link to="/" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Dashboard
+    <aside className="w-52 bg-zinc-900/50 border-r border-zinc-800 flex flex-col">
+      <div className="p-4 border-b border-zinc-800">
+        <Link to="/" className="font-mono text-base font-bold text-zinc-100 tracking-tight flex items-center gap-1.5">
+          <span className="text-emerald-400">{'>'}</span>
+          <span>selfctl</span>
+          <span className="animate-pulse text-emerald-400 ml-0.5">_</span>
         </Link>
       </div>
 
@@ -56,7 +58,7 @@ export function Sidebar() {
         {navSections.map((section, i) => (
           <div key={i}>
             {section.label && (
-              <p className="px-3 mb-1 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+              <p className="px-3 mb-1.5 text-[10px] font-mono font-medium text-zinc-600 uppercase tracking-widest">
                 {section.label}
               </p>
             )}
@@ -65,13 +67,13 @@ export function Sidebar() {
                 <Link
                   key={to}
                   to={to}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-sm font-mono font-medium transition-colors ${
                     isActive(to)
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
+                      ? 'bg-zinc-800 text-emerald-400 border border-zinc-700'
+                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 border border-transparent'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3.5 h-3.5" />
                   {label}
                 </Link>
               ))}
@@ -79,6 +81,12 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
+
+      <div className="p-3 border-t border-zinc-800">
+        <div className="px-3 py-1.5">
+          <span className="text-[10px] font-mono text-zinc-700">v0.1.0</span>
+        </div>
+      </div>
     </aside>
   )
 }

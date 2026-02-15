@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const SITE_TITLE = 'Dashboard'
+const SITE_TITLE = 'selfctl'
 
 export function usePageTitle(title?: string) {
   useEffect(() => {

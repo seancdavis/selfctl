@@ -15,26 +15,26 @@ export function getScoreLevel(percentage: number): ScoreLevel {
 export function getScoreClasses(level: ScoreLevel): string {
   switch (level) {
     case 'fire':
-      return 'bg-orange-100 text-orange-800 border-orange-300'
+      return 'bg-orange-500/10 text-orange-400 border-orange-500/20'
     case 'green':
-      return 'bg-green-100 text-green-800 border-green-300'
+      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
     case 'yellow':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+      return 'bg-amber-500/10 text-amber-400 border-amber-500/20'
     case 'red':
-      return 'bg-red-100 text-red-800 border-red-300'
+      return 'bg-red-500/10 text-red-400 border-red-500/20'
   }
 }
 
 export function getScoreTextColor(level: ScoreLevel): string {
   switch (level) {
     case 'fire':
-      return 'text-orange-600'
+      return 'text-orange-400'
     case 'green':
-      return 'text-green-600'
+      return 'text-emerald-400'
     case 'yellow':
-      return 'text-yellow-600'
+      return 'text-amber-400'
     case 'red':
-      return 'text-red-600'
+      return 'text-red-400'
   }
 }
 
@@ -48,7 +48,7 @@ export function getStalenessDescription(count: number): string {
 
 export function getStalenessClasses(count: number): string {
   if (count === 0) return ''
-  if (count === 1) return 'border-l-yellow-400'
+  if (count === 1) return 'border-l-amber-400'
   if (count === 2) return 'border-l-orange-400'
   if (count >= 3) return 'border-l-red-400'
   return ''

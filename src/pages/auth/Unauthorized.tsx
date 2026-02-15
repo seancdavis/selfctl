@@ -4,23 +4,23 @@ export function Unauthorized() {
   const { user, signOut } = useAuth()
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full px-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">Access Denied</h2>
-          <p className="text-red-600 mb-4">
-            Your account is not approved for this application.
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="max-w-sm w-full px-6">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
+          <h2 className="text-sm font-mono font-semibold text-red-400 mb-2">access denied</h2>
+          <p className="text-red-400/70 text-sm font-mono mb-4">
+            account not approved for this instance
           </p>
           {user && (
-            <p className="text-sm text-gray-500 mb-4">
-              Signed in as {user.email}
+            <p className="text-xs font-mono text-zinc-600 mb-4">
+              signed in as {user.email}
             </p>
           )}
           <button
             onClick={signOut}
-            className="text-sm text-gray-600 hover:text-gray-900 underline cursor-pointer"
+            className="text-xs font-mono text-zinc-600 hover:text-zinc-400 underline cursor-pointer transition-colors"
           >
-            Sign Out
+            sign out
           </button>
         </div>
       </div>

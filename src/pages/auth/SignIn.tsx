@@ -4,23 +4,27 @@ export function SignIn() {
   const { signInWithGoogle, user } = useAuth()
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full px-6">
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="max-w-sm w-full px-6">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900">Personal Dashboard</h1>
-          <p className="text-gray-500 mt-2">
-            Sign in with your Google account to continue.
+          <h1 className="text-2xl font-mono font-bold text-zinc-100 flex items-center justify-center gap-2">
+            <span className="text-emerald-400">{'>'}</span>
+            selfctl
+            <span className="animate-pulse text-emerald-400">_</span>
+          </h1>
+          <p className="text-zinc-600 text-sm font-mono mt-3">
+            authenticate to continue
           </p>
         </div>
 
         {user ? (
-          <p className="text-center text-gray-400">Checking access...</p>
+          <p className="text-center text-zinc-600 text-sm font-mono">checking access...</p>
         ) : (
           <button
             onClick={signInWithGoogle}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer"
+            className="w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 py-2.5 px-4 rounded font-mono text-sm font-medium transition-all cursor-pointer"
           >
-            Continue with Google
+            continue with google
           </button>
         )}
       </div>
