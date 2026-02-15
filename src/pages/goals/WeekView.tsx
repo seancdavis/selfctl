@@ -40,7 +40,6 @@ export function WeekView() {
       existing.push(task)
       groups.set(key, existing)
     }
-    // Sort groups alphabetically, but put Uncategorized last
     const sorted = new Map<string, TaskWithCategory[]>()
     const keys = [...groups.keys()].sort((a, b) => {
       if (a === 'Uncategorized') return 1
@@ -64,7 +63,6 @@ export function WeekView() {
           : prev
       )
     } catch {
-      // Refetch on error to sync state
       refetchTasks()
     }
   }, [setTasks, refetchTasks])
@@ -86,7 +84,7 @@ export function WeekView() {
       setShowAddForm(false)
       refetchTasks()
     } catch {
-      // Error handled silently, task list will refetch
+      // silent
     } finally {
       setAddingTask(false)
     }
@@ -105,7 +103,7 @@ export function WeekView() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-sm font-mono">
         {error}
       </div>
     )
@@ -113,7 +111,7 @@ export function WeekView() {
 
   if (!week || !weekId) {
     return (
-      <div className="text-center py-12 text-gray-500">Week not found.</div>
+      <div className="text-center py-12 text-zinc-600 font-mono text-sm">week not found</div>
     )
   }
 
@@ -129,57 +127,59 @@ export function WeekView() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">Week {weekId}</h1>
+            <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2">
+              <span className="text-blue-400">$</span> week::{weekId}
+            </h1>
             {week.totalTasks > 0 && (
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${scoreClasses}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border ${scoreClasses}`}
               >
                 {percentage}%{level === 'fire' && ' \uD83D\uDD25'}
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-xs font-mono text-zinc-600 mt-0.5">
             {formatWeekRange(week.startDate, week.endDate)}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Link
             to={`/goals/weekly/${prevWeekId}`}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
             title="Previous week"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           </Link>
           <Link
             to={`/goals/weekly/${nextWeekId}`}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
             title="Next week"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
 
       {/* Task summary */}
-      <p className="text-sm text-gray-500 mt-2">
+      <p className="text-xs font-mono text-zinc-600 mt-2">
         {week.completedTasks} of {week.totalTasks} tasks completed
       </p>
 
       {/* Task groups */}
       <div className="mt-6 space-y-6">
         {groupedTasks.size === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No tasks this week.
+          <div className="text-center py-8 text-zinc-600 font-mono text-sm">
+            no tasks this week
           </div>
         )}
 
         {[...groupedTasks.entries()].map(([category, categoryTasks]) => (
           <div key={category}>
-            <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <h2 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest mb-2">
               {category}
             </h2>
-            <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+            <div className="bg-zinc-900 rounded-lg border border-zinc-800 divide-y divide-zinc-800">
               {categoryTasks.map((task) => {
                 const stalenessClass = getStalenessClasses(task.stalenessCount)
                 return (
@@ -191,10 +191,10 @@ export function WeekView() {
                   >
                     <button
                       onClick={() => handleToggleTask(task.id)}
-                      className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
+                      className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
                         task.status === 'completed'
-                          ? 'bg-blue-600 border-blue-600 text-white'
-                          : 'border-gray-300 hover:border-blue-400'
+                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                          : 'border-zinc-600 hover:border-zinc-500'
                       }`}
                       aria-label={task.status === 'completed' ? 'Mark incomplete' : 'Mark complete'}
                     >
@@ -206,16 +206,16 @@ export function WeekView() {
                     </button>
                     <button
                       onClick={() => navigate(`/goals/weekly/${weekId}/tasks/${task.id}`)}
-                      className={`flex-1 text-left text-sm transition-colors hover:text-blue-600 ${
+                      className={`flex-1 text-left text-sm font-mono transition-colors hover:text-blue-400 ${
                         task.status === 'completed'
-                          ? 'text-gray-400 line-through'
-                          : 'text-gray-900'
+                          ? 'text-zinc-600 line-through'
+                          : 'text-zinc-200'
                       }`}
                     >
                       {task.title}
                     </button>
                     {task.isRecurring && (
-                      <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
                         recurring
                       </span>
                     )}
@@ -232,14 +232,14 @@ export function WeekView() {
         {showAddForm ? (
           <form
             onSubmit={handleAddTask}
-            className="bg-white rounded-lg border border-gray-200 p-4"
+            className="bg-zinc-900 rounded-lg border border-zinc-800 p-4"
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-900">Add Task</h3>
+              <h3 className="text-sm font-mono font-medium text-zinc-200">add task</h3>
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-zinc-600 hover:text-zinc-400 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -249,16 +249,16 @@ export function WeekView() {
                 type="text"
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
-                placeholder="Task title"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="task title"
+                className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
                 autoFocus
               />
               <select
                 value={newTaskCategory}
                 onChange={(e) => setNewTaskCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
               >
-                <option value="">No category</option>
+                <option value="">no category</option>
                 {categories?.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -269,16 +269,16 @@ export function WeekView() {
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  className="px-3 py-1.5 text-xs font-mono text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
-                  Cancel
+                  cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!newTaskTitle.trim() || addingTask}
-                  className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium rounded hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
                 >
-                  {addingTask ? 'Adding...' : 'Add Task'}
+                  {addingTask ? 'adding...' : 'add'}
                 </button>
               </div>
             </div>
@@ -286,10 +286,10 @@ export function WeekView() {
         ) : (
           <button
             onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-mono text-zinc-600 hover:text-zinc-400 border border-dashed border-zinc-700 rounded hover:border-zinc-600 transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            Add Task
+            <Plus className="w-3.5 h-3.5" />
+            add task
           </button>
         )}
       </div>
@@ -298,9 +298,9 @@ export function WeekView() {
       <div className="mt-8">
         <Link
           to="/goals/weekly"
-          className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="text-xs font-mono text-zinc-600 hover:text-zinc-400 transition-colors"
         >
-          &larr; All weeks
+          &larr; all weeks
         </Link>
       </div>
     </div>

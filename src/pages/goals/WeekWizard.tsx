@@ -39,7 +39,7 @@ function WizardSection<T extends { id: number; title: string; selected: boolean 
   if (items.length === 0) return null
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
+    <div className="bg-zinc-900 rounded-lg border border-zinc-800">
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
@@ -47,13 +47,13 @@ function WizardSection<T extends { id: number; title: string; selected: boolean 
       >
         <div className="flex items-center gap-2">
           {collapsed ? (
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-zinc-600" />
           )}
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-          <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-            {selectedCount}/{items.length} selected
+          <h3 className="text-sm font-mono font-semibold text-zinc-200">{title}</h3>
+          <span className="text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-medium">
+            {selectedCount}/{items.length}
           </span>
         </div>
         <button
@@ -62,30 +62,30 @@ function WizardSection<T extends { id: number; title: string; selected: boolean 
             e.stopPropagation()
             onToggleAll()
           }}
-          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+          className="text-xs font-mono text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
         >
-          {selectedCount === items.length ? 'Deselect All' : 'Select All'}
+          {selectedCount === items.length ? 'deselect all' : 'select all'}
         </button>
       </button>
 
       {!collapsed && (
-        <div className="border-t border-gray-100 divide-y divide-gray-50">
+        <div className="border-t border-zinc-800 divide-y divide-zinc-800/50">
           {items.map((item) => {
             const categoryName = getCategoryName?.(item)
             return (
               <label
                 key={item.id}
-                className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer"
+                className="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-800/50 cursor-pointer transition-colors"
               >
                 <input
                   type="checkbox"
                   checked={selectedIds.has(item.id)}
                   onChange={() => onToggle(item.id)}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="w-3.5 h-3.5 rounded-sm border-zinc-600 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-0"
                 />
-                <span className="flex-1 text-sm text-gray-900">{item.title}</span>
+                <span className="flex-1 text-sm font-mono text-zinc-300">{item.title}</span>
                 {categoryName && (
-                  <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
                     {categoryName}
                   </span>
                 )}
@@ -104,13 +104,11 @@ export function WeekWizard() {
   const [generating, setGenerating] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
 
-  // Selections
   const [selectedRecurring, setSelectedRecurring] = useState<Set<number>>(new Set())
   const [selectedIncomplete, setSelectedIncomplete] = useState<Set<number>>(new Set())
   const [selectedFollowUps, setSelectedFollowUps] = useState<Set<number>>(new Set())
   const [selectedBacklog, setSelectedBacklog] = useState<Set<number>>(new Set())
 
-  // Fetch weeks to determine previous week
   const { data: weeks, loading: weeksLoading } = useAsyncData<Week[]>(
     () => weeksApi.list(),
     []
@@ -127,14 +125,12 @@ export function WeekWizard() {
     return getCurrentWeekId()
   }, [previousWeekId])
 
-  // Fetch wizard data
   const { data: wizardData, loading: dataLoading, error: dataError } = useAsyncData<WeekGenerationData>(
     () => weekGenerationApi.getData(previousWeekId),
     [previousWeekId],
     { immediate: !weeksLoading }
   )
 
-  // Initialize selections when data loads
   const initialized = useState(false)
   if (wizardData && !initialized[0]) {
     const recurringIds = new Set(wizardData.recurringTasks.filter((t) => t.selected).map((t) => t.id))
@@ -207,7 +203,7 @@ export function WeekWizard() {
 
   if (dataError) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-sm font-mono">
         {dataError}
       </div>
     )
@@ -218,17 +214,19 @@ export function WeekWizard() {
       {/* Back link */}
       <Link
         to="/goals/weekly"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-4"
+        className="inline-flex items-center gap-1 text-xs font-mono text-zinc-600 hover:text-zinc-400 transition-colors mb-4"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Weekly Goals
+        <ArrowLeft className="w-3.5 h-3.5" />
+        back to weekly
       </Link>
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">New Week</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Creating week <span className="font-medium text-gray-700">{newWeekId}</span>
+          <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2">
+            <span className="text-blue-400">$</span> week::init
+          </h1>
+          <p className="text-xs font-mono text-zinc-600 mt-1">
+            creating week <span className="text-zinc-400">{newWeekId}</span>
             {previousWeekId && (
               <> (following {previousWeekId})</>
             )}
@@ -237,7 +235,7 @@ export function WeekWizard() {
       </div>
 
       {wizardData && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <WizardSection<WizardRecurringTask>
             title="Recurring Tasks"
             items={wizardData.recurringTasks}
@@ -285,15 +283,15 @@ export function WeekWizard() {
             wizardData.incompleteTasks.length === 0 &&
             wizardData.followUps.length === 0 &&
             wizardData.backlogItems.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No tasks available to add. The new week will be created empty.
+              <div className="text-center py-8 text-zinc-600 text-sm font-mono">
+                no tasks available — week will be created empty
               </div>
             )}
         </div>
       )}
 
       {generateError && (
-        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+        <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm font-mono">
           {generateError}
         </div>
       )}
@@ -302,9 +300,9 @@ export function WeekWizard() {
         <button
           onClick={handleGenerate}
           disabled={generating}
-          className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="px-6 py-2.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-sm font-mono font-medium rounded hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
         >
-          {generating ? 'Creating...' : 'Create Week'}
+          {generating ? 'creating...' : 'create week'}
         </button>
       </div>
     </div>

@@ -81,29 +81,31 @@ export function Categories() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-500 mt-1">Organize your tasks and backlog items.</p>
+          <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2">
+            <span className="text-zinc-500">$</span> config::categories
+          </h1>
+          <p className="text-xs font-mono text-zinc-600 mt-1">organize tasks and backlog items</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium rounded hover:bg-emerald-500/20 transition-colors"
         >
-          <Plus className="w-4 h-4" />
-          Add Category
+          <Plus className="w-3.5 h-3.5" />
+          add category
         </button>
       </div>
 
       {/* Add form */}
       {showAddForm && (
-        <div className="mt-4 bg-white rounded-lg border border-gray-200 p-4">
+        <div className="mt-4 bg-zinc-900 rounded-lg border border-zinc-800 p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-900">New Category</h3>
+            <h3 className="text-sm font-mono font-medium text-zinc-200">new category</h3>
             <button
               onClick={() => {
                 setShowAddForm(false)
                 setNewName('')
               }}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-zinc-600 hover:text-zinc-400 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -113,8 +115,8 @@ export function Categories() {
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="Category name"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="category name"
+              className="flex-1 px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
               autoFocus
             />
             <button
@@ -123,16 +125,16 @@ export function Categories() {
                 setShowAddForm(false)
                 setNewName('')
               }}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="px-3 py-2 text-xs font-mono text-zinc-500 hover:text-zinc-300 transition-colors"
             >
-              Cancel
+              cancel
             </button>
             <button
               type="submit"
               disabled={!newName.trim() || adding}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium rounded hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
             >
-              {adding ? 'Adding...' : 'Add'}
+              {adding ? 'adding...' : 'add'}
             </button>
           </form>
         </div>
@@ -146,19 +148,19 @@ export function Categories() {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-sm font-mono">
             {error}
           </div>
         )}
 
         {!loading && !error && sortedCategories.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            <p>No categories yet.</p>
+          <div className="text-center py-12 text-zinc-600 font-mono text-sm">
+            <p>no categories yet</p>
           </div>
         )}
 
         {sortedCategories.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+          <div className="bg-zinc-900 rounded-lg border border-zinc-800 divide-y divide-zinc-800">
             {sortedCategories.map((cat) => (
               <div
                 key={cat.id}
@@ -170,7 +172,7 @@ export function Categories() {
                       type="text"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-3 py-1.5 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSaveEdit(cat.id)
@@ -180,14 +182,14 @@ export function Categories() {
                     <button
                       onClick={() => handleSaveEdit(cat.id)}
                       disabled={!editingName.trim() || savingEdit}
-                      className="p-1.5 text-green-600 hover:text-green-700 disabled:opacity-50 transition-colors"
+                      className="p-1.5 text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors"
                       title="Save"
                     >
                       <Check className="w-4 h-4" />
                     </button>
                     <button
                       onClick={cancelEdit}
-                      className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="p-1.5 text-zinc-600 hover:text-zinc-400 transition-colors"
                       title="Cancel"
                     >
                       <X className="w-4 h-4" />
@@ -195,18 +197,18 @@ export function Categories() {
                   </div>
                 ) : (
                   <>
-                    <span className="text-sm text-gray-900">{cat.name}</span>
+                    <span className="text-sm font-mono text-zinc-200">{cat.name}</span>
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => startEdit(cat.id, cat.name)}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="p-1.5 text-zinc-600 hover:text-zinc-400 transition-colors"
                         title="Edit"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(cat.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                        className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors"
                         title="Delete"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -222,28 +224,28 @@ export function Categories() {
 
       {/* Delete confirmation */}
       {showDeleteConfirm !== null && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Delete Category
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 max-w-sm mx-4 shadow-2xl">
+            <h3 className="text-sm font-mono font-semibold text-zinc-200">
+              delete category
             </h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm font-mono text-zinc-500">
               Are you sure you want to delete this category? Tasks and backlog
               items using this category will become uncategorized.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => setShowDeleteConfirm(null)}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                className="px-4 py-2 text-xs font-mono text-zinc-500 hover:text-zinc-300 transition-colors"
               >
-                Cancel
+                cancel
               </button>
               <button
                 onClick={() => handleDelete(showDeleteConfirm)}
                 disabled={deletingId === showDeleteConfirm}
-                className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-mono font-medium rounded hover:bg-red-500/20 disabled:opacity-40 transition-colors"
               >
-                {deletingId === showDeleteConfirm ? 'Deleting...' : 'Delete'}
+                {deletingId === showDeleteConfirm ? 'deleting...' : 'delete'}
               </button>
             </div>
           </div>
