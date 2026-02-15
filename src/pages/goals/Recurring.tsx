@@ -1,17 +1,15 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { Plus, Pause, Play, Pencil } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useCategories } from '@/contexts/CategoriesContext'
-import { useToast } from '@/contexts/ToastContext'
 import { recurringTasksApi } from '@/lib/api'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { RecurringTask } from '@/types'
 
 export function Recurring() {
   usePageTitle('Recurring Tasks')
+  const navigate = useNavigate()
   const { data: categories } = useCategories()
-  const toast = useToast()
   const { data: tasks, loading, error, refetch, setData: setTasks } = useAsyncData<RecurringTask[]>(
     () => recurringTasksApi.list(),
     []
@@ -20,60 +18,21 @@ export function Recurring() {
   const activeTasks = tasks?.filter((t) => t.isActive) ?? []
   const pausedTasks = tasks?.filter((t) => !t.isActive) ?? []
 
-  const handleToggle = async (task: RecurringTask) => {
-    const newActive = !task.isActive
-    setTasks((prev) =>
-      prev?.map((t) => (t.id === task.id ? { ...t, isActive: newActive } : t)) ?? null
-    )
-
-    try {
-      await recurringTasksApi.toggle(task.id)
-      toast.success(newActive ? 'task resumed' : 'task paused')
-      refetch()
-    } catch {
-      setTasks((prev) =>
-        prev?.map((t) => (t.id === task.id ? { ...t, isActive: !newActive } : t)) ?? null
-      )
-      toast.error('failed to toggle task')
-    }
-  }
-
   const renderTaskRow = (task: RecurringTask) => {
     const category = categories?.find((c) => c.id === task.categoryId)
     return (
       <div
         key={task.id}
-        className="p-4 hover:bg-zinc-800/50 transition-colors"
+        onClick={() => navigate(`/goals/recurring/${task.id}`)}
+        className="p-4 hover:bg-zinc-800/50 transition-colors cursor-pointer"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="text-sm font-mono text-zinc-200">{task.title}</span>
-            {category && (
-              <span className="text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded shrink-0">
-                {category.name}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <Link
-              to={`/goals/recurring/${task.id}`}
-              className="p-1.5 text-zinc-600 hover:text-zinc-400 transition-colors"
-              title="Edit"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </Link>
-            <button
-              onClick={() => handleToggle(task)}
-              className="p-1.5 text-zinc-600 hover:text-blue-400 transition-colors"
-              title={task.isActive ? 'Pause' : 'Resume'}
-            >
-              {task.isActive ? (
-                <Pause className="w-3.5 h-3.5" />
-              ) : (
-                <Play className="w-3.5 h-3.5" />
-              )}
-            </button>
-          </div>
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-sm font-mono text-zinc-200">{task.title}</span>
+          {category && (
+            <span className="text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded shrink-0">
+              {category.name}
+            </span>
+          )}
         </div>
         {task.contentHtml && (
           <div
@@ -104,9 +63,9 @@ export function Recurring() {
       </div>
 
       <div className="mt-6">
-        {loading && (
-          <div className="flex justify-center py-12">
-            <LoadingSpinner />
+        {loading && !tasks?.length && (
+          <div className="text-center py-12 text-zinc-600 font-mono text-sm">
+            <p>loading...</p>
           </div>
         )}
 

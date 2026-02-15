@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { ReactNode } from 'react'
 
-type ToastType = 'success' | 'error'
+type ToastType = 'success' | 'error' | 'loading'
 
 interface Toast {
   id: number
@@ -13,6 +14,8 @@ interface Toast {
 interface ToastContextValue {
   success: (message: string) => void
   error: (message: string) => void
+  loading: (message: string) => number
+  dismiss: (id: number) => void
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null)
@@ -25,34 +28,41 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
-    timerRef.current = setTimeout(() => {
-      setVisible(false)
-      setTimeout(() => onDismiss(toast.id), 200)
-    }, 3000)
+    if (toast.type !== 'loading') {
+      timerRef.current = setTimeout(() => {
+        setVisible(false)
+        setTimeout(() => onDismiss(toast.id), 200)
+      }, 3000)
+    }
     return () => clearTimeout(timerRef.current)
-  }, [toast.id, onDismiss])
+  }, [toast.id, toast.type, onDismiss])
 
   const handleClick = () => {
+    if (toast.type === 'loading') return
     clearTimeout(timerRef.current)
     setVisible(false)
     setTimeout(() => onDismiss(toast.id), 200)
   }
 
-  const accent = toast.type === 'success' ? 'border-emerald-500/30' : 'border-red-500/30'
-  const textColor = toast.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-  const prefix = toast.type === 'success' ? '✓' : '✗'
+  const accent =
+    toast.type === 'success' ? 'border-emerald-500/30' :
+    toast.type === 'error' ? 'border-red-500/30' :
+    'border-zinc-700'
 
   return (
     <div
       onClick={handleClick}
       className={`
-        cursor-pointer px-4 py-2.5 rounded border bg-zinc-900 shadow-lg
-        font-mono text-xs transition-all duration-200
+        px-4 py-2.5 rounded border bg-zinc-900 shadow-lg
+        font-mono text-xs transition-all duration-200 flex items-center gap-2
+        ${toast.type !== 'loading' ? 'cursor-pointer' : ''}
         ${accent} ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
       `}
     >
-      <span className={textColor}>{prefix}</span>
-      <span className="text-zinc-300 ml-2">{toast.message}</span>
+      {toast.type === 'success' && <span className="text-emerald-400">✓</span>}
+      {toast.type === 'error' && <span className="text-red-400">✗</span>}
+      {toast.type === 'loading' && <LoadingSpinner size="sm" />}
+      <span className="text-zinc-300">{toast.message}</span>
     </div>
   )
 }
@@ -60,18 +70,21 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const dismiss = useCallback((id: number) => {
+  const dismissToast = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
-  const addToast = useCallback((message: string, type: ToastType) => {
+  const addToast = useCallback((message: string, type: ToastType): number => {
     const id = nextId++
     setToasts((prev) => [...prev, { id, message, type }])
+    return id
   }, [])
 
   const contextValue: ToastContextValue = {
-    success: useCallback((msg: string) => addToast(msg, 'success'), [addToast]),
-    error: useCallback((msg: string) => addToast(msg, 'error'), [addToast]),
+    success: useCallback((msg: string) => { addToast(msg, 'success') }, [addToast]),
+    error: useCallback((msg: string) => { addToast(msg, 'error') }, [addToast]),
+    loading: useCallback((msg: string) => addToast(msg, 'loading'), [addToast]),
+    dismiss: dismissToast,
   }
 
   return (
@@ -80,7 +93,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {createPortal(
         <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
           {toasts.map((toast) => (
-            <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
+            <ToastItem key={toast.id} toast={toast} onDismiss={dismissToast} />
           ))}
         </div>,
         document.body

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
 import { Trash2, Pause, Play } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
+import { AutoResizeTextarea } from '@/components/ui/AutoResizeTextarea'
 import { useCategories } from '@/contexts/CategoriesContext'
 import { useToast } from '@/contexts/ToastContext'
 import { recurringTasksApi } from '@/lib/api'
@@ -151,12 +152,12 @@ export function RecurringTaskModal() {
                 </option>
               ))}
             </select>
-            <textarea
+            <AutoResizeTextarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="content (markdown, optional)"
-              rows={4}
-              className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 resize-y"
+              minRows={3}
+              className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
             />
 
             <div className="flex items-center justify-between pt-2">
