@@ -15,8 +15,9 @@ export function Recurring() {
     []
   )
 
-  const activeTasks = tasks?.filter((t) => t.isActive) ?? []
-  const pausedTasks = tasks?.filter((t) => !t.isActive) ?? []
+  const sort = (a: RecurringTask, b: RecurringTask) => a.title.localeCompare(b.title)
+  const activeTasks = (tasks?.filter((t) => t.isActive) ?? []).sort(sort)
+  const pausedTasks = (tasks?.filter((t) => !t.isActive) ?? []).sort(sort)
 
   const renderTaskRow = (task: RecurringTask) => {
     const category = categories?.find((c) => c.id === task.categoryId)
