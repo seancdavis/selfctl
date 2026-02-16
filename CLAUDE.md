@@ -98,6 +98,7 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 ### API Endpoints (Netlify Functions)
 
 - `POST /api/health-sync` — iOS health data sync (API key auth via `HEALTH_SYNC_API_KEY`)
+- `assistant.ts` — AI assistant endpoints (API key auth via `ASSISTANT_API_KEY`; see `docs/assistant-api.md`)
 - `GET /api/health/weight?days=N` — Weight entries (days=0 for all-time)
 - `GET /api/auth-check` — Auth status check (bypass support)
 - `goals-weeks.ts` — Week CRUD + list + task reorder + find-active + PATCH (label/dates) + overlap validation
@@ -123,11 +124,12 @@ One file per table: `weight-entries`, `weeks` (UUID PK + label), `tasks` (UUID w
 - Page components in `src/pages/`, mirroring route structure
 - Shared hooks in `src/hooks/`
 - Utility functions in `src/lib/`
+- Documentation in `docs/` (public API docs)
 - Database schema in `db/schema/`, one file per table, re-exported from `db/schema/index.ts`
 - Netlify Functions in `netlify/functions/`, shared helpers in `_shared/`
 - API endpoints use flat naming: `health-sync.ts`, `goals-weeks.ts`
 - Path alias `@/` maps to `src/`
-- Auth: All routes protected via Neon Auth except `POST /api/health-sync` (API key auth)
+- Auth: All routes protected via Neon Auth except `POST /api/health-sync` (API key auth via `HEALTH_SYNC_API_KEY`) and `/api/assistant/*` (API key auth via `ASSISTANT_API_KEY`)
 - Dark mode: Layout shell (sidebar, header, main container) has dark classes; page content does not yet
 - Page titles set via `usePageTitle` hook in each page component
 
