@@ -10,7 +10,7 @@ import {
 import { ArrowRight, Plus, ListTodo, Target, Scale, Activity, RotateCcw } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { healthApi, weeksApi } from '@/lib/api'
-import { getCurrentWeekId, formatWeekRange } from '@/lib/dates'
+import { formatWeekRange } from '@/lib/dates'
 import { calculatePercentage, getScoreLevel } from '@/lib/scores'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { Week, WeightEntry } from '@/types'
@@ -40,10 +40,10 @@ function StatusDot({ level }: { level: string }) {
 }
 
 function WeekProgressWidget() {
-  const currentWeekId = getCurrentWeekId()
-  const { data: weeks, loading } = useAsyncData<Week[]>(() => weeksApi.list(), [])
-
-  const currentWeek = weeks?.find((w) => w.id === currentWeekId)
+  const { data: currentWeek, loading } = useAsyncData<Week | null>(
+    () => weeksApi.findActive().catch(() => null),
+    []
+  )
 
   if (loading) {
     return (
@@ -100,7 +100,7 @@ function WeekProgressWidget() {
           </h3>
         </div>
         <Link
-          to={`/goals/weekly/${currentWeekId}`}
+          to={`/goals/weekly/${currentWeek.label}`}
           className="text-xs font-mono text-zinc-600 hover:text-zinc-400 inline-flex items-center gap-1 transition-colors"
         >
           view <ArrowRight className="w-3 h-3" />
@@ -249,7 +249,7 @@ function QuickActions() {
     {
       label: 'weekly',
       description: 'Current week tasks',
-      to: `/goals/weekly/${getCurrentWeekId()}`,
+      to: '/goals/weekly/current',
       icon: Target,
       accent: 'text-blue-400',
       border: 'hover:border-blue-400/30',

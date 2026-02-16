@@ -1,11 +1,12 @@
-import { useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate, Link, Outlet } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Pencil, Check, X } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useCategories } from '@/contexts/CategoriesContext'
+import { useToast } from '@/contexts/ToastContext'
 import { weeksApi, tasksApi } from '@/lib/api'
-import { formatWeekRange, getPreviousWeekId, getNextWeekId } from '@/lib/dates'
+import { formatWeekRange } from '@/lib/dates'
 import { calculatePercentage, getScoreLevel, getScoreClasses, getStalenessClasses } from '@/lib/scores'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { Week, TaskWithCategory } from '@/types'
@@ -14,9 +15,16 @@ export function WeekView() {
   const { weekId } = useParams<{ weekId: string }>()
   usePageTitle(weekId ? `Week ${weekId}` : 'Week')
   const navigate = useNavigate()
+  const toast = useToast()
   const { data: categories } = useCategories()
 
-  const { data: week, loading: weekLoading, error: weekError } = useAsyncData<Week>(
+  const [editing, setEditing] = useState(false)
+  const [editLabel, setEditLabel] = useState('')
+  const [editStartDate, setEditStartDate] = useState('')
+  const [editEndDate, setEditEndDate] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+
+  const { data: week, loading: weekLoading, error: weekError, setData: setWeek } = useAsyncData<Week>(
     () => weeksApi.get(weekId!),
     [weekId]
   )
@@ -25,6 +33,21 @@ export function WeekView() {
     () => tasksApi.listByWeek(weekId!),
     [weekId]
   )
+
+  // Fetch all weeks for prev/next navigation
+  const { data: allWeeks } = useAsyncData<Week[]>(() => weeksApi.list(), [])
+
+  const { prevWeek, nextWeek } = useMemo(() => {
+    if (!allWeeks || !weekId) return { prevWeek: null, nextWeek: null }
+    // allWeeks comes sorted by startDate desc from API
+    const sorted = [...allWeeks].sort((a, b) => a.startDate.localeCompare(b.startDate))
+    const currentIdx = sorted.findIndex((w) => w.label === weekId)
+    if (currentIdx < 0) return { prevWeek: null, nextWeek: null }
+    return {
+      prevWeek: currentIdx > 0 ? sorted[currentIdx - 1] : null,
+      nextWeek: currentIdx < sorted.length - 1 ? sorted[currentIdx + 1] : null,
+    }
+  }, [allWeeks, weekId])
 
   const groupedTasks = useMemo(() => {
     if (!tasks) return new Map<string, TaskWithCategory[]>()
@@ -42,7 +65,6 @@ export function WeekView() {
       return a.localeCompare(b)
     })
     for (const key of keys) {
-      // Tasks come pre-sorted by sortOrder from API
       sorted.set(key, groups.get(key)!)
     }
     return sorted
@@ -85,7 +107,6 @@ export function WeekView() {
     const taskA = categoryTasks[idx]
     const taskB = categoryTasks[swapIdx]
 
-    // Optimistically swap sortOrder values
     const newTasks = tasks.map((t) => {
       if (t.id === taskA.id) return { ...t, sortOrder: taskB.sortOrder }
       if (t.id === taskB.id) return { ...t, sortOrder: taskA.sortOrder }
@@ -93,7 +114,6 @@ export function WeekView() {
     })
     setTasks(newTasks)
 
-    // Send full reorder — flatten all groups in display order with swapped positions
     const allTaskIds: number[] = []
     const newGrouped = new Map<string, TaskWithCategory[]>()
     for (const t of newTasks) {
@@ -121,6 +141,48 @@ export function WeekView() {
       refetchTasks()
     }
   }, [tasks, weekId, groupedTasks, setTasks, refetchTasks])
+
+  const startEditing = () => {
+    if (!week) return
+    setEditLabel(week.label)
+    setEditStartDate(week.startDate)
+    setEditEndDate(week.endDate)
+    setEditing(true)
+  }
+
+  const cancelEditing = () => {
+    setEditing(false)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!week || !editLabel.trim()) return
+    setEditSaving(true)
+    try {
+      const updates: { label?: string; startDate?: string; endDate?: string } = {}
+      if (editLabel !== week.label) updates.label = editLabel
+      if (editStartDate !== week.startDate) updates.startDate = editStartDate
+      if (editEndDate !== week.endDate) updates.endDate = editEndDate
+
+      if (Object.keys(updates).length === 0) {
+        setEditing(false)
+        return
+      }
+
+      const updated = await weeksApi.update(week.label, updates)
+      setWeek(updated)
+      setEditing(false)
+      toast.success('week updated')
+
+      // If label changed, navigate to new URL
+      if (updates.label) {
+        navigate(`/goals/weekly/${updates.label}`, { replace: true })
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'failed to update week')
+    } finally {
+      setEditSaving(false)
+    }
+  }
 
   const loading = weekLoading || tasksLoading
   const error = weekError || tasksError
@@ -150,46 +212,110 @@ export function WeekView() {
   const percentage = calculatePercentage(week.completedTasks, week.totalTasks)
   const level = getScoreLevel(percentage)
   const scoreClasses = getScoreClasses(level)
-  const prevWeekId = getPreviousWeekId(weekId)
-  const nextWeekId = getNextWeekId(weekId)
 
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2">
-              <span className="text-blue-400">$</span> week::{weekId}
-            </h1>
-            {week.totalTasks > 0 && (
-              <span
-                className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border ${scoreClasses}`}
-              >
-                {percentage}%{level === 'fire' && ' \uD83D\uDD25'}
-              </span>
-            )}
-          </div>
-          <p className="text-xs font-mono text-zinc-600 mt-0.5">
-            {formatWeekRange(week.startDate, week.endDate)}
-          </p>
+          {editing ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-blue-400 text-xl font-bold font-mono">$</span>
+                <span className="text-xl font-mono font-bold text-zinc-100">week::</span>
+                <input
+                  type="text"
+                  value={editLabel}
+                  onChange={(e) => setEditLabel(e.target.value)}
+                  className="w-24 px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xl font-mono font-bold text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={editStartDate}
+                  onChange={(e) => setEditStartDate(e.target.value)}
+                  className="px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xs font-mono text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+                />
+                <span className="text-xs font-mono text-zinc-600">to</span>
+                <input
+                  type="date"
+                  value={editEndDate}
+                  onChange={(e) => setEditEndDate(e.target.value)}
+                  className="px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xs font-mono text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+                />
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={editSaving || !editLabel.trim()}
+                  className="p-1 text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors"
+                  title="Save"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  title="Cancel"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2">
+                  <span className="text-blue-400">$</span> week::{week.label}
+                </h1>
+                <button
+                  onClick={startEditing}
+                  className="p-1 text-zinc-600 hover:text-zinc-400 transition-colors"
+                  title="Edit week"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                {week.totalTasks > 0 && (
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border ${scoreClasses}`}
+                  >
+                    {percentage}%{level === 'fire' && ' \uD83D\uDD25'}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs font-mono text-zinc-600 mt-0.5">
+                {formatWeekRange(week.startDate, week.endDate)}
+              </p>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-1">
-          <Link
-            to={`/goals/weekly/${prevWeekId}`}
-            className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
-            title="Previous week"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Link>
-          <Link
-            to={`/goals/weekly/${nextWeekId}`}
-            className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
-            title="Next week"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Link>
+          {prevWeek ? (
+            <Link
+              to={`/goals/weekly/${prevWeek.label}`}
+              className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
+              title={`Previous: ${prevWeek.label}`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Link>
+          ) : (
+            <span className="p-2 text-zinc-800">
+              <ChevronLeft className="w-4 h-4" />
+            </span>
+          )}
+          {nextWeek ? (
+            <Link
+              to={`/goals/weekly/${nextWeek.label}`}
+              className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
+              title={`Next: ${nextWeek.label}`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <span className="p-2 text-zinc-800">
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          )}
         </div>
       </div>
 
@@ -258,7 +384,6 @@ export function WeekView() {
                         recurring
                       </span>
                     )}
-                    {/* Reorder arrows — visible on hover */}
                     {categoryTasks.length > 1 && (
                       <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity">
                         <button

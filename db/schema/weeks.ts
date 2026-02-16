@@ -1,7 +1,8 @@
-import { pgTable, varchar, integer, timestamp } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, varchar, integer, timestamp } from 'drizzle-orm/pg-core'
 
 export const weeks = pgTable('weeks', {
-  id: varchar('id', { length: 7 }).primaryKey(), // "2026-05" format
+  id: uuid('id').defaultRandom().primaryKey(),
+  label: varchar('label', { length: 7 }).notNull().unique(), // "2026-05" format
   startDate: varchar('start_date', { length: 10 }).notNull(), // "2026-01-27"
   endDate: varchar('end_date', { length: 10 }).notNull(), // "2026-02-02"
   totalTasks: integer('total_tasks').notNull().default(0),

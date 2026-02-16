@@ -1,6 +1,7 @@
 import {
   pgTable,
   serial,
+  uuid,
   varchar,
   text,
   integer,
@@ -16,7 +17,7 @@ export const taskStatusEnum = pgEnum('task_status', ['pending', 'completed'])
 
 export const tasks = pgTable('tasks', {
   id: serial('id').primaryKey(),
-  weekId: varchar('week_id', { length: 7 })
+  weekId: uuid('week_id')
     .notNull()
     .references(() => weeks.id, { onDelete: 'cascade' }),
   categoryId: integer('category_id').references(() => categories.id, {

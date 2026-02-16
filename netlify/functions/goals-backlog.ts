@@ -35,7 +35,7 @@ export default async (req: Request, context: Context) => {
     if (lastSegment === 'to-week') {
       if (req.method !== 'POST') return methodNotAllowed()
 
-      let body: { weekId: string }
+      let body: { weekId: string } // weekId is actually the week label
       try {
         body = await req.json()
       } catch {
@@ -45,6 +45,15 @@ export default async (req: Request, context: Context) => {
       if (!body.weekId) {
         return error('weekId is required')
       }
+
+      // Look up week by label to get UUID
+      const [week] = await db
+        .select()
+        .from(schema.weeks)
+        .where(eq(schema.weeks.label, body.weekId))
+        .limit(1)
+
+      if (!week) return notFound('Week not found')
 
       const [item] = await db
         .select()
@@ -58,7 +67,7 @@ export default async (req: Request, context: Context) => {
       const [task] = await db
         .insert(schema.tasks)
         .values({
-          weekId: body.weekId,
+          weekId: week.id,
           categoryId: item.categoryId,
           title: item.title,
           contentMarkdown: item.contentMarkdown,
@@ -87,7 +96,7 @@ export default async (req: Request, context: Context) => {
       const weekTasks = await db
         .select()
         .from(schema.tasks)
-        .where(eq(schema.tasks.weekId, body.weekId))
+        .where(eq(schema.tasks.weekId, week.id))
 
       await db
         .update(schema.weeks)
@@ -96,7 +105,7 @@ export default async (req: Request, context: Context) => {
           completedTasks: weekTasks.filter((t) => t.status === 'completed').length,
           updatedAt: new Date(),
         })
-        .where(eq(schema.weeks.id, body.weekId))
+        .where(eq(schema.weeks.id, week.id))
 
       return json(task, 201)
     }

@@ -51,7 +51,8 @@ export function BacklogModal() {
     [itemIdNum]
   )
 
-  const sortedWeeks = weeks ? [...weeks].sort((a, b) => b.id.localeCompare(a.id)) : []
+  // API returns sorted by startDate desc already
+  const sortedWeeks = weeks ?? []
 
   useEffect(() => {
     if (!itemId) return
@@ -232,8 +233,8 @@ export function BacklogModal() {
               >
                 <option value="">select a week</option>
                 {sortedWeeks.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    Week {w.id}
+                  <option key={w.id} value={w.label}>
+                    Week {w.label}
                   </option>
                 ))}
               </select>

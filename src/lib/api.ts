@@ -66,13 +66,14 @@ export const healthApi = {
 // Weeks API
 export const weeksApi = {
   list: () => request<Week[]>('/goals-weeks'),
-  get: (id: string) => request<Week>(`/goals-weeks/${id}`),
-  create: (data: Partial<Week>) =>
-    request<Week>('/goals-weeks', { method: 'POST', body: JSON.stringify(data) }),
-  delete: (id: string) =>
-    request<void>(`/goals-weeks/${id}`, { method: 'DELETE' }),
-  reorder: (weekId: string, taskIds: number[]) =>
-    request<void>(`/goals-weeks/${weekId}/reorder`, {
+  get: (label: string) => request<Week>(`/goals-weeks/${label}`),
+  update: (label: string, data: { label?: string; startDate?: string; endDate?: string }) =>
+    request<Week>(`/goals-weeks/${label}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (label: string) =>
+    request<void>(`/goals-weeks/${label}`, { method: 'DELETE' }),
+  findActive: () => request<Week>('/goals-weeks/find-active'),
+  reorder: (label: string, taskIds: number[]) =>
+    request<void>(`/goals-weeks/${label}/reorder`, {
       method: 'POST',
       body: JSON.stringify({ taskIds }),
     }),

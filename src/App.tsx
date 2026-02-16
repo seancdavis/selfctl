@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { AuthContext, useAuthProvider, useAuth } from '@/hooks/useAuth'
-import { PageLoader } from '@/components/LoadingSpinner'
+import { PageLoader, LoadingSpinner } from '@/components/LoadingSpinner'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { SignIn } from '@/pages/auth/SignIn'
 import { Unauthorized } from '@/pages/auth/Unauthorized'
@@ -19,14 +19,53 @@ import { Categories } from '@/pages/goals/Categories'
 import { CategoryModal } from '@/pages/goals/CategoryModal'
 import { CategoriesProvider } from '@/contexts/CategoriesContext'
 import { ToastProvider } from '@/contexts/ToastContext'
-import { getCurrentWeekId } from '@/lib/dates'
+import { weeksApi } from '@/lib/api'
+import { usePageTitle } from '@/hooks/usePageTitle'
+import { Plus } from 'lucide-react'
 
-function CurrentWeekRedirect() {
+function CurrentWeekPage() {
+  usePageTitle('This Week')
   const navigate = useNavigate()
+  const [status, setStatus] = useState<'loading' | 'no-active' | 'error'>('loading')
+
   useEffect(() => {
-    navigate(`/goals/weekly/${getCurrentWeekId()}`, { replace: true })
+    weeksApi.findActive()
+      .then((week) => {
+        navigate(`/goals/weekly/${week.label}`, { replace: true })
+      })
+      .catch(() => {
+        setStatus('no-active')
+      })
   }, [navigate])
-  return null
+
+  if (status === 'loading') {
+    return (
+      <div className="flex justify-center py-12">
+        <LoadingSpinner />
+      </div>
+    )
+  }
+
+  return (
+    <div className="text-center py-12">
+      <p className="text-zinc-500 text-sm font-mono mb-6">no active week</p>
+      <div className="flex items-center justify-center gap-3">
+        <Link
+          to="/goals/weekly/new"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium rounded hover:bg-emerald-500/20 transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          create new week
+        </Link>
+        <Link
+          to="/goals/weekly"
+          className="inline-flex items-center gap-2 px-4 py-2 text-zinc-500 border border-zinc-700 text-xs font-mono font-medium rounded hover:text-zinc-300 hover:border-zinc-600 transition-colors"
+        >
+          visit most recent week
+        </Link>
+      </div>
+    </div>
+  )
 }
 
 function OAuthCallbackHandler({ refetch }: { refetch: () => Promise<void> }) {
@@ -62,7 +101,7 @@ function AuthenticatedApp() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/health" element={<Health />} />
           <Route path="/goals/weekly" element={<WeeklyGoals />} />
-          <Route path="/goals/weekly/current" element={<CurrentWeekRedirect />} />
+          <Route path="/goals/weekly/current" element={<CurrentWeekPage />} />
           <Route path="/goals/weekly/new" element={<WeekWizard />} />
           <Route path="/goals/weekly/:weekId" element={<WeekView />}>
             <Route path="tasks/new" element={<TaskModal />} />

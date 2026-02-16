@@ -87,3 +87,26 @@ export function isValidWeekId(weekId: string): boolean {
   const week = parseInt(match[2])
   return week >= 1 && week <= getWeeksInYear(year)
 }
+
+export function addDays(dateStr: string, days: number): string {
+  const date = new Date(dateStr + 'T00:00:00')
+  date.setDate(date.getDate() + days)
+  return date.toISOString().split('T')[0]
+}
+
+export function suggestNextWeekDates(mostRecentWeek?: { label: string; endDate: string }): {
+  label: string
+  startDate: string
+  endDate: string
+} {
+  if (mostRecentWeek) {
+    const suggestedLabel = getNextWeekId(mostRecentWeek.label)
+    const suggestedStart = addDays(mostRecentWeek.endDate, 1)
+    const suggestedEnd = addDays(suggestedStart, 6)
+    return { label: suggestedLabel, startDate: suggestedStart, endDate: suggestedEnd }
+  }
+  const label = getCurrentWeekId()
+  const startDate = getWeekStartDate(label)
+  const endDate = getWeekEndDate(label)
+  return { label, startDate, endDate }
+}

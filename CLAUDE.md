@@ -59,9 +59,9 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 /                                    Dashboard
 /health                              Weight & Body (time periods, aggregation)
 /goals/weekly                        Weekly Goals list
-/goals/weekly/current                Redirect to current ISO week
-/goals/weekly/new                    Week Wizard (generate new week)
-/goals/weekly/:weekId                Week View (task list with checkboxes, reorder)
+/goals/weekly/current                Active week (find by date range, or "no active week" page)
+/goals/weekly/new                    Week Wizard (editable label/dates, generate new week)
+/goals/weekly/:weekLabel             Week View (task list, inline edit label/dates, adjacent-week nav)
   /tasks/new                         → Task add modal (nested)
   /tasks/:taskId                     → Task edit modal (nested, notes, status, delete)
 /goals/backlog                       Backlog list
@@ -84,7 +84,7 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 - `src/hooks/useDarkMode.ts` — Dark mode with localStorage + system preference
 - `src/lib/api.ts` — API client with typed endpoints for health, goals, weeks, tasks, backlog, notes, recurring, categories, tags
 - `src/lib/scores.ts` — Week completion scoring and staleness styling
-- `src/lib/dates.ts` — Week ID helpers (YYYY-WNN format)
+- `src/lib/dates.ts` — Week label helpers (YYYY-NN format), date suggestions for wizard
 - `src/lib/health-stats.ts` — Weight data aggregation (weekly/monthly averages)
 - `src/contexts/CategoriesContext.tsx` — Shared categories data
 - `src/components/layout/` — AppLayout, Sidebar, Header (dark mode toggle)
@@ -99,8 +99,8 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 - `POST /api/health-sync` — iOS health data sync (API key auth via `HEALTH_SYNC_API_KEY`)
 - `GET /api/health/weight?days=N` — Weight entries (days=0 for all-time)
 - `GET /api/auth-check` — Auth status check (bypass support)
-- `goals-weeks.ts` — Week CRUD + list + task reorder
-- `goals-weeks-new.ts` — Week generation wizard data + create
+- `goals-weeks.ts` — Week CRUD + list + task reorder + find-active + PATCH (label/dates) + overlap validation
+- `goals-weeks-new.ts` — Week generation wizard data + create (accepts label, startDate, endDate)
 - `goals-tasks.ts` — Task CRUD + toggle status + tags
 - `goals-backlog.ts` — Backlog CRUD + move to week + tags
 - `goals-notes.ts` — Notes CRUD (for tasks and backlog items)
@@ -112,7 +112,9 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 
 ### Database Schema (`db/schema/`)
 
-One file per table: `weight-entries`, `weeks`, `tasks`, `backlog-items`, `notes`, `recurring-tasks`, `categories`, `tags`, `follow-ups`, `attachments`, `approved-users`, `user-profiles`
+One file per table: `weight-entries`, `weeks` (UUID PK + label), `tasks` (UUID weekId FK), `backlog-items`, `notes`, `recurring-tasks`, `categories`, `tags`, `follow-ups`, `attachments`, `approved-users`, `user-profiles`
+
+**Weeks architecture:** Weeks use UUID primary keys internally. The `label` column (e.g., `2026-08`) is the user-facing identifier used in URLs and API lookups. Dates (startDate, endDate) are user-settable, not derived from the label. Overlap validation prevents conflicting date ranges.
 
 ## Project Conventions
 

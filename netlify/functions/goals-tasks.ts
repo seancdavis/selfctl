@@ -247,7 +247,7 @@ export default async (req: Request, context: Context) => {
   // POST /api/goals-tasks
   if (req.method === 'POST') {
     let body: {
-      weekId: string
+      weekId: string // this is the week label
       categoryId?: number | null
       title: string
       contentMarkdown?: string | null
@@ -264,6 +264,15 @@ export default async (req: Request, context: Context) => {
       return error('weekId and title are required')
     }
 
+    // Look up week by label to get UUID
+    const [week] = await db
+      .select()
+      .from(schema.weeks)
+      .where(eq(schema.weeks.label, body.weekId))
+      .limit(1)
+
+    if (!week) return notFound('Week not found')
+
     const contentHtml = body.contentMarkdown
       ? await renderMarkdown(body.contentMarkdown)
       : null
@@ -271,7 +280,7 @@ export default async (req: Request, context: Context) => {
     const [task] = await db
       .insert(schema.tasks)
       .values({
-        weekId: body.weekId,
+        weekId: week.id,
         categoryId: body.categoryId || null,
         title: body.title,
         contentMarkdown: body.contentMarkdown || null,
@@ -281,7 +290,7 @@ export default async (req: Request, context: Context) => {
       })
       .returning()
 
-    await updateWeekStats(body.weekId)
+    await updateWeekStats(week.id)
 
     return json(task, 201)
   }

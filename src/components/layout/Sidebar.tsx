@@ -8,7 +8,6 @@ import {
   RotateCcw,
   FolderOpen,
 } from 'lucide-react'
-import { getCurrentWeekId } from '@/lib/dates'
 
 interface NavItem {
   to: string
@@ -36,7 +35,9 @@ const navSections: { label?: string; items: NavItem[] }[] = [
         to: '/goals/weekly/current',
         label: 'this week',
         icon: CalendarCheck,
-        isActive: (p) => p.startsWith(`/goals/weekly/${getCurrentWeekId()}`),
+        isActive: (p) =>
+          p === '/goals/weekly/current' ||
+          (p.startsWith('/goals/weekly/') && p !== '/goals/weekly' && p !== '/goals/weekly/new'),
       },
       {
         to: '/goals/weekly',

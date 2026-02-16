@@ -29,6 +29,7 @@ export type TaskStatus = 'pending' | 'completed'
 
 export interface Week {
   id: string
+  label: string
   startDate: string
   endDate: string
   totalTasks: number
@@ -152,7 +153,9 @@ export interface WeekGenerationData {
 }
 
 export interface GenerateWeekPayload {
-  weekId: string
+  label: string
+  startDate: string
+  endDate: string
   recurringTaskIds: number[]
   incompleteTaskIds: number[]
   followUpIds: number[]

@@ -5,7 +5,7 @@ import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { weeksApi, weekGenerationApi } from '@/lib/api'
-import { getCurrentWeekId, getNextWeekId } from '@/lib/dates'
+import { suggestNextWeekDates } from '@/lib/dates'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type {
   Week,
@@ -109,25 +109,36 @@ export function WeekWizard() {
   const [selectedFollowUps, setSelectedFollowUps] = useState<Set<number>>(new Set())
   const [selectedBacklog, setSelectedBacklog] = useState<Set<number>>(new Set())
 
+  const [weekLabel, setWeekLabel] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+
   const { data: weeks, loading: weeksLoading } = useAsyncData<Week[]>(
     () => weeksApi.list(),
     []
   )
 
-  const previousWeekId = useMemo(() => {
+  const previousWeek = useMemo(() => {
     if (!weeks || weeks.length === 0) return undefined
-    const sorted = [...weeks].sort((a, b) => b.id.localeCompare(a.id))
-    return sorted[0].id
+    // API returns sorted by startDate desc, so first is most recent
+    return weeks[0]
   }, [weeks])
 
-  const newWeekId = useMemo(() => {
-    if (previousWeekId) return getNextWeekId(previousWeekId)
-    return getCurrentWeekId()
-  }, [previousWeekId])
+  // Initialize label/date fields from suggestion once weeks load
+  const suggestionsInitialized = useState(false)
+  if (weeks && !suggestionsInitialized[0]) {
+    const suggestion = suggestNextWeekDates(
+      previousWeek ? { label: previousWeek.label, endDate: previousWeek.endDate } : undefined
+    )
+    setWeekLabel(suggestion.label)
+    setStartDate(suggestion.startDate)
+    setEndDate(suggestion.endDate)
+    suggestionsInitialized[1](true)
+  }
 
   const { data: wizardData, loading: dataLoading, error: dataError } = useAsyncData<WeekGenerationData>(
-    () => weekGenerationApi.getData(previousWeekId),
-    [previousWeekId],
+    () => weekGenerationApi.getData(previousWeek?.label),
+    [previousWeek?.label],
     { immediate: !weeksLoading }
   )
 
@@ -173,17 +184,23 @@ export function WeekWizard() {
   )
 
   const handleGenerate = async () => {
+    if (!weekLabel.trim() || !startDate || !endDate) {
+      setGenerateError('Label, start date, and end date are required')
+      return
+    }
     setGenerating(true)
     setGenerateError(null)
     try {
       await weekGenerationApi.generate({
-        weekId: newWeekId,
+        label: weekLabel,
+        startDate,
+        endDate,
         recurringTaskIds: [...selectedRecurring],
         incompleteTaskIds: [...selectedIncomplete],
         followUpIds: [...selectedFollowUps],
         backlogItemIds: [...selectedBacklog],
       })
-      navigate(`/goals/weekly/${newWeekId}`)
+      navigate(`/goals/weekly/${weekLabel}`)
     } catch (err) {
       setGenerateError(err instanceof Error ? err.message : 'Failed to create week')
     } finally {
@@ -226,11 +243,45 @@ export function WeekWizard() {
             <span className="text-blue-400">$</span> week::init
           </h1>
           <p className="text-xs font-mono text-zinc-600 mt-1">
-            creating week <span className="text-zinc-400">{newWeekId}</span>
-            {previousWeekId && (
-              <> (following {previousWeekId})</>
-            )}
+            configure and create a new week
           </p>
+        </div>
+      </div>
+
+      {/* Week configuration */}
+      <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-4 mb-4">
+        <h3 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest mb-3">
+          week settings
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-mono text-zinc-500 mb-1">label</label>
+            <input
+              type="text"
+              value={weekLabel}
+              onChange={(e) => setWeekLabel(e.target.value)}
+              placeholder="2026-08"
+              className="w-full px-3 py-1.5 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-mono text-zinc-500 mb-1">start date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-3 py-1.5 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-mono text-zinc-500 mb-1">end date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-3 py-1.5 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+            />
+          </div>
         </div>
       </div>
 

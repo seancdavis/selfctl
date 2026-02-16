@@ -1,34 +1,9 @@
 import type { Config, Context } from '@netlify/functions'
-import { eq, and, ne } from 'drizzle-orm'
+import { eq, and, lte, gte } from 'drizzle-orm'
 import { db, schema } from './_shared/db.js'
 import { json, error, methodNotAllowed } from './_shared/response.js'
 import { renderMarkdown } from './_shared/markdown.js'
 import { requireAuth } from './_shared/auth.js'
-
-function getWeekStartDate(weekId: string): string {
-  const [yearStr, weekStr] = weekId.split('-')
-  const year = parseInt(yearStr, 10)
-  const week = parseInt(weekStr, 10)
-
-  // ISO 8601: Week 1 contains Jan 4th. Find Monday of week 1.
-  const jan4 = new Date(Date.UTC(year, 0, 4))
-  const dayOfWeek = jan4.getUTCDay() || 7 // Convert Sunday=0 to 7
-  const mondayOfWeek1 = new Date(jan4)
-  mondayOfWeek1.setUTCDate(jan4.getUTCDate() - (dayOfWeek - 1))
-
-  // Add (week - 1) * 7 days to get Monday of target week
-  const targetMonday = new Date(mondayOfWeek1)
-  targetMonday.setUTCDate(mondayOfWeek1.getUTCDate() + (week - 1) * 7)
-
-  return targetMonday.toISOString().split('T')[0]
-}
-
-function getWeekEndDate(weekId: string): string {
-  const startDate = getWeekStartDate(weekId)
-  const sunday = new Date(startDate + 'T00:00:00Z')
-  sunday.setUTCDate(sunday.getUTCDate() + 6)
-  return sunday.toISOString().split('T')[0]
-}
 
 export default async (req: Request, context: Context) => {
   const auth = await requireAuth(req)
@@ -36,14 +11,14 @@ export default async (req: Request, context: Context) => {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { previousWeekId } = context.params
+  const { previousWeekLabel } = context.params
   const url = new URL(req.url)
   const pathSegments = url.pathname.split('/').filter(Boolean)
 
   // Determine if this is a /data route
   const isDataRoute = pathSegments.includes('data')
 
-  // GET /api/goals-weeks-new/data or /api/goals-weeks-new/data/:previousWeekId
+  // GET /api/goals-weeks-new/data or /api/goals-weeks-new/data/:previousWeekLabel
   if (req.method === 'GET' && isDataRoute) {
     // Get active recurring tasks
     const recurringTasks = await db
@@ -84,28 +59,37 @@ export default async (req: Request, context: Context) => {
 
     // Get incomplete tasks from previous week if specified
     let incompleteTasks: Array<Record<string, unknown>> = []
-    if (previousWeekId) {
-      const prevTasks = await db
-        .select({
-          task: schema.tasks,
-          category: schema.categories,
-        })
-        .from(schema.tasks)
-        .leftJoin(
-          schema.categories,
-          eq(schema.tasks.categoryId, schema.categories.id),
-        )
-        .where(
-          and(
-            eq(schema.tasks.weekId, previousWeekId),
-            eq(schema.tasks.status, 'pending'),
-          ),
-        )
+    if (previousWeekLabel) {
+      // Look up week by label to get UUID
+      const [prevWeek] = await db
+        .select()
+        .from(schema.weeks)
+        .where(eq(schema.weeks.label, previousWeekLabel))
+        .limit(1)
 
-      incompleteTasks = prevTasks.map((row) => ({
-        ...row.task,
-        category: row.category,
-      }))
+      if (prevWeek) {
+        const prevTasks = await db
+          .select({
+            task: schema.tasks,
+            category: schema.categories,
+          })
+          .from(schema.tasks)
+          .leftJoin(
+            schema.categories,
+            eq(schema.tasks.categoryId, schema.categories.id),
+          )
+          .where(
+            and(
+              eq(schema.tasks.weekId, prevWeek.id),
+              eq(schema.tasks.status, 'pending'),
+            ),
+          )
+
+        incompleteTasks = prevTasks.map((row) => ({
+          ...row.task,
+          category: row.category,
+        }))
+      }
     }
 
     return json({
@@ -119,7 +103,9 @@ export default async (req: Request, context: Context) => {
   // POST /api/goals-weeks-new
   if (req.method === 'POST' && !isDataRoute) {
     let body: {
-      weekId: string
+      label: string
+      startDate: string
+      endDate: string
       recurringTaskIds?: number[]
       incompleteTaskIds?: number[]
       followUpIds?: number[]
@@ -136,20 +122,28 @@ export default async (req: Request, context: Context) => {
       return error('Invalid JSON body')
     }
 
-    if (!body.weekId) {
-      return error('weekId is required')
+    if (!body.label || !body.startDate || !body.endDate) {
+      return error('label, startDate, and endDate are required')
     }
 
-    const startDate = getWeekStartDate(body.weekId)
-    const endDate = getWeekEndDate(body.weekId)
+    // Overlap validation
+    const overlapping = await db
+      .select()
+      .from(schema.weeks)
+      .where(and(lte(schema.weeks.startDate, body.endDate), gte(schema.weeks.endDate, body.startDate)))
+      .limit(1)
 
-    // Create the week
+    if (overlapping.length > 0) {
+      return error(`Date range overlaps with week ${overlapping[0].label}`, 409)
+    }
+
+    // Create the week (UUID auto-generated)
     const [week] = await db
       .insert(schema.weeks)
       .values({
-        id: body.weekId,
-        startDate,
-        endDate,
+        label: body.label,
+        startDate: body.startDate,
+        endDate: body.endDate,
       })
       .returning()
 
@@ -167,7 +161,7 @@ export default async (req: Request, context: Context) => {
         const [task] = await db
           .insert(schema.tasks)
           .values({
-            weekId: body.weekId,
+            weekId: week.id,
             categoryId: rt.categoryId,
             title: rt.title,
             contentMarkdown: rt.contentMarkdown,
@@ -192,7 +186,7 @@ export default async (req: Request, context: Context) => {
           const [task] = await db
             .insert(schema.tasks)
             .values({
-              weekId: body.weekId,
+              weekId: week.id,
               categoryId: prevTask.categoryId,
               title: prevTask.title,
               contentMarkdown: prevTask.contentMarkdown,
@@ -220,7 +214,7 @@ export default async (req: Request, context: Context) => {
           const [task] = await db
             .insert(schema.tasks)
             .values({
-              weekId: body.weekId,
+              weekId: week.id,
               categoryId: followUp.categoryId,
               title: followUp.title,
               contentMarkdown: followUp.contentMarkdown,
@@ -248,7 +242,7 @@ export default async (req: Request, context: Context) => {
           const [task] = await db
             .insert(schema.tasks)
             .values({
-              weekId: body.weekId,
+              weekId: week.id,
               categoryId: item.categoryId,
               title: item.title,
               contentMarkdown: item.contentMarkdown,
@@ -288,7 +282,7 @@ export default async (req: Request, context: Context) => {
         const [task] = await db
           .insert(schema.tasks)
           .values({
-            weekId: body.weekId,
+            weekId: week.id,
             categoryId: nt.categoryId || null,
             title: nt.title,
             contentMarkdown: nt.contentMarkdown || null,
@@ -307,7 +301,7 @@ export default async (req: Request, context: Context) => {
         completedTasks: 0,
         updatedAt: new Date(),
       })
-      .where(eq(schema.weeks.id, body.weekId))
+      .where(eq(schema.weeks.id, week.id))
 
     return json({ week, tasks: createdTasks }, 201)
   }
@@ -319,6 +313,6 @@ export const config: Config = {
   path: [
     '/api/goals-weeks-new',
     '/api/goals-weeks-new/data',
-    '/api/goals-weeks-new/data/:previousWeekId',
+    '/api/goals-weeks-new/data/:previousWeekLabel',
   ],
 }
