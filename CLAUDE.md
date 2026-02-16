@@ -12,6 +12,7 @@ You are Sean's development partner on this project. Work collaboratively, make d
 - **Charting:** Recharts
 - **Icons:** Lucide React
 - **Markdown:** marked
+- **Drag-and-drop:** @dnd-kit (core, sortable, utilities)
 
 ## Development
 
@@ -79,7 +80,7 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 
 - `src/App.tsx` — Routes, auth gating, providers
 - `src/hooks/useAuth.ts` — Auth flow (Neon Auth → bypass fallback)
-- `src/hooks/useAsyncData.ts` — Generic data fetching hook with refetch and setData
+- `src/hooks/useAsyncData.ts` — Generic data fetching hook with refetch (background, no loading flash) and setData
 - `src/hooks/usePageTitle.ts` — Dynamic `<title>` (`Page | Dashboard`)
 - `src/hooks/useDarkMode.ts` — Dark mode with localStorage + system preference
 - `src/lib/api.ts` — API client with typed endpoints for health, goals, weeks, tasks, backlog, notes, recurring, categories, tags
@@ -104,8 +105,8 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 - `goals-tasks.ts` — Task CRUD + toggle status + tags
 - `goals-backlog.ts` — Backlog CRUD + move to week + tags
 - `goals-notes.ts` — Notes CRUD (for tasks and backlog items)
-- `goals-recurring.ts` — Recurring tasks CRUD + toggle active
-- `goals-categories.ts` — Categories CRUD
+- `goals-recurring.ts` — Recurring tasks CRUD + toggle active + tags
+- `goals-categories.ts` — Categories CRUD + description field
 - `goals-tags.ts` — Tags CRUD (scoped to categories)
 - `goals-follow-ups.ts` — Follow-ups list
 - `goals-attachments.ts` / `goals-upload.ts` — File attachments via Netlify Blobs
@@ -139,7 +140,26 @@ All list pages use a consistent URL-routed modal pattern:
 - Rows are fully clickable (`onClick → navigate`), no per-row action buttons
 - Toast feedback on all mutations via `useToast()`
 - `AutoResizeTextarea` for markdown fields
-- Tags: stored as `text[]` on tasks/backlog items, managed via `TagSelector` component scoped to category
+- Tags: stored as `text[]` on tasks/backlog items/recurring tasks, managed via `TagSelector` component scoped to category (uses `<div>` not `<form>` to avoid nested form issues)
+
+### Optimistic Updates
+
+- Mutations should optimistically update local state via `setData`/`setTasks` before or after the API call, then `refetch` in the background to sync
+- `useAsyncData.refetch()` does NOT show loading spinner — only the initial fetch shows loading
+- New task creation: API response is inserted into the task list immediately; background refetch syncs server state
+
+### Task Reordering (Week View)
+
+- Uses `@dnd-kit` with `DndContext` + `SortableContext` per category group
+- `SortableTaskRow` component with grip handle (`GripVertical`) as drag handle
+- `PointerSensor` with `distance: 5` activation constraint to prevent accidental drags on click
+- Reordering stays within category boundaries (each category has its own `DndContext`)
+- `groupedTasks` memo sorts by `sortOrder` — optimistic `sortOrder` updates render immediately
+
+### Markdown Rendering
+
+- Rendered HTML containers use `markdown-content` CSS class for list/paragraph styling
+- Styles defined in `src/index.css`: dashes for `<ul>`, no left margin, compact spacing
 
 ## Skills Reference
 
