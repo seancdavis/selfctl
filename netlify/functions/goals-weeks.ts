@@ -1,5 +1,5 @@
 import type { Config, Context } from '@netlify/functions'
-import { eq, desc, asc, and, ne, lte, gte } from 'drizzle-orm'
+import { eq, desc, asc, and, ne, lte, gte, sql } from 'drizzle-orm'
 import { db, schema } from './_shared/db.js'
 import { json, error, notFound, methodNotAllowed } from './_shared/response.js'
 import { requireAuth } from './_shared/auth.js'
@@ -95,6 +95,7 @@ export default async (req: Request, context: Context) => {
       .select({
         task: schema.tasks,
         category: schema.categories,
+        noteCount: sql<number>`(SELECT COUNT(*) FROM notes WHERE notes.task_id = ${schema.tasks.id})`.as('noteCount'),
       })
       .from(schema.tasks)
       .leftJoin(schema.categories, eq(schema.tasks.categoryId, schema.categories.id))
@@ -105,6 +106,7 @@ export default async (req: Request, context: Context) => {
       weekTasks.map((row) => ({
         ...row.task,
         category: row.category,
+        noteCount: Number(row.noteCount),
       })),
     )
   }

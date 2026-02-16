@@ -65,6 +65,7 @@ export interface Task {
 
 export interface TaskWithCategory extends Task {
   category: Category | null
+  noteCount: number
 }
 
 export interface RecurringTask {

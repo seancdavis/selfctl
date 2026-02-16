@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate, Link, Outlet } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Plus, Pencil, Check, X, GripVertical } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Pencil, Check, X, GripVertical, MessageSquare } from 'lucide-react'
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
@@ -12,7 +12,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { weeksApi, tasksApi } from '@/lib/api'
 import { formatWeekRange } from '@/lib/dates'
 import { calculatePercentage, getScoreLevel, getScoreClasses, getStalenessClasses } from '@/lib/scores'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { Skeleton } from '@/components/ui/Skeleton'
 import type { Week, TaskWithCategory } from '@/types'
 
 function SortableTaskRow({
@@ -35,51 +35,67 @@ function SortableTaskRow({
       ref={setNodeRef}
       style={style}
       onClick={() => onNavigate(`/goals/weekly/${weekId}/tasks/${task.id}`)}
-      className={`flex items-center gap-3 p-3 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
+      className={`p-3 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
         stalenessClass ? `border-l-4 ${stalenessClass}` : ''
       }`}
     >
-      <div
-        className="flex-shrink-0 cursor-grab text-zinc-600 hover:text-zinc-400 touch-none"
-        {...attributes}
-        {...listeners}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <GripVertical className="w-3.5 h-3.5" />
-      </div>
-      <button
-        onClick={(e) => onToggle(task.id, e)}
-        className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
-          task.status === 'completed'
-            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-            : 'border-zinc-600 hover:border-zinc-500'
-        }`}
-        aria-label={task.status === 'completed' ? 'Mark incomplete' : 'Mark complete'}
-      >
-        {task.status === 'completed' && (
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
+      <div className="flex items-center gap-3">
+        <div
+          className="flex-shrink-0 cursor-grab text-zinc-600 hover:text-zinc-400 touch-none"
+          {...attributes}
+          {...listeners}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="w-3.5 h-3.5" />
+        </div>
+        <button
+          onClick={(e) => onToggle(task.id, e)}
+          className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
+            task.status === 'completed'
+              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+              : 'border-zinc-600 hover:border-zinc-500'
+          }`}
+          aria-label={task.status === 'completed' ? 'Mark incomplete' : 'Mark complete'}
+        >
+          {task.status === 'completed' && (
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </button>
+        <span
+          className={`flex-1 text-sm font-mono transition-colors ${
+            task.status === 'completed'
+              ? 'text-zinc-600 line-through'
+              : 'text-zinc-200'
+          }`}
+        >
+          {task.title}
+        </span>
+        {task.tags?.length > 0 && task.tags.map((tag) => (
+          <span key={tag} className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400/70 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+            {tag}
+          </span>
+        ))}
+        {task.isRecurring && (
+          <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
+            recurring
+          </span>
         )}
-      </button>
-      <span
-        className={`flex-1 text-sm font-mono transition-colors ${
-          task.status === 'completed'
-            ? 'text-zinc-600 line-through'
-            : 'text-zinc-200'
-        }`}
-      >
-        {task.title}
-      </span>
-      {task.tags?.length > 0 && task.tags.map((tag) => (
-        <span key={tag} className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400/70 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-          {tag}
-        </span>
-      ))}
-      {task.isRecurring && (
-        <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
-          recurring
-        </span>
+        {task.noteCount > 0 && (
+          <span className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
+            <MessageSquare className="w-3 h-3" />
+            {task.noteCount}
+          </span>
+        )}
+      </div>
+      {task.contentHtml && (
+        <div
+          className={`ml-[3.25rem] mt-1 text-xs font-mono markdown-content ${
+            task.status === 'completed' ? 'text-zinc-700' : 'text-zinc-500'
+          }`}
+          dangerouslySetInnerHTML={{ __html: task.contentHtml }}
+        />
       )}
     </div>
   )
@@ -256,13 +272,53 @@ export function WeekView() {
     }
   }
 
+  const { totalTasks, completedTasks } = useMemo(() => {
+    if (!tasks) return { totalTasks: 0, completedTasks: 0 }
+    return {
+      totalTasks: tasks.length,
+      completedTasks: tasks.filter(t => t.status === 'completed').length,
+    }
+  }, [tasks])
+
   const loading = weekLoading || tasksLoading
   const error = weekError || tasksError
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <LoadingSpinner />
+      <div>
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-5 w-12" />
+            </div>
+            <Skeleton className="h-3.5 w-36 mt-1" />
+          </div>
+          <div className="flex items-center gap-1">
+            <Skeleton className="h-8 w-8 rounded" />
+            <Skeleton className="h-8 w-8 rounded" />
+          </div>
+        </div>
+        {/* Summary skeleton */}
+        <Skeleton className="h-3.5 w-44 mt-2" />
+        {/* Category group skeletons */}
+        <div className="mt-6 space-y-6">
+          {[0, 1].map((g) => (
+            <div key={g}>
+              <Skeleton className="h-3 w-24 mb-2" />
+              <div className="bg-zinc-900 rounded-lg border border-zinc-800 divide-y divide-zinc-800">
+                {[0, 1, 2].map((r) => (
+                  <div key={r} className="flex items-center gap-3 p-3">
+                    <Skeleton className="h-3.5 w-3.5 flex-shrink-0" />
+                    <Skeleton className="h-4 w-4 rounded-sm flex-shrink-0" />
+                    <Skeleton className="h-4 flex-1" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -281,7 +337,7 @@ export function WeekView() {
     )
   }
 
-  const percentage = calculatePercentage(week.completedTasks, week.totalTasks)
+  const percentage = calculatePercentage(completedTasks, totalTasks)
   const level = getScoreLevel(percentage)
   const scoreClasses = getScoreClasses(level)
 
@@ -346,7 +402,7 @@ export function WeekView() {
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
-                {week.totalTasks > 0 && (
+                {totalTasks > 0 && (
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border ${scoreClasses}`}
                   >
@@ -393,7 +449,7 @@ export function WeekView() {
 
       {/* Task summary */}
       <p className="text-xs font-mono text-zinc-600 mt-2">
-        {week.completedTasks} of {week.totalTasks} tasks completed
+        {completedTasks} of {totalTasks} tasks completed
       </p>
 
       {/* Task groups */}
