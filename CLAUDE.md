@@ -59,13 +59,20 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 /                                    Dashboard
 /health                              Weight & Body (time periods, aggregation)
 /goals/weekly                        Weekly Goals list
+/goals/weekly/current                Redirect to current ISO week
 /goals/weekly/new                    Week Wizard (generate new week)
-/goals/weekly/:weekId                Week View (task list with checkboxes)
-/goals/weekly/:weekId/tasks/:taskId  Task Detail (notes, status toggle)
+/goals/weekly/:weekId                Week View (task list with checkboxes, reorder)
+  /tasks/new                         → Task add modal (nested)
+  /tasks/:taskId                     → Task edit modal (nested, notes, status, delete)
 /goals/backlog                       Backlog list
-/goals/backlog/:itemId               Backlog Item Detail (notes, move to week)
+  /new                               → Backlog add modal (nested)
+  /:itemId                           → Backlog edit modal (nested, notes, move-to-week, delete)
 /goals/recurring                     Recurring Tasks (CRUD, pause/resume)
-/settings/categories                 Categories (CRUD)
+  /new                               → Recurring task add modal (nested)
+  /:taskId                           → Recurring task edit modal (nested)
+/settings/categories                 Categories (CRUD, tag management)
+  /new                               → Category add modal (nested)
+  /:id                               → Category edit modal (nested, tags, delete)
 ```
 
 ### Key Files
@@ -75,32 +82,37 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 - `src/hooks/useAsyncData.ts` — Generic data fetching hook with refetch and setData
 - `src/hooks/usePageTitle.ts` — Dynamic `<title>` (`Page | Dashboard`)
 - `src/hooks/useDarkMode.ts` — Dark mode with localStorage + system preference
-- `src/lib/api.ts` — API client with typed endpoints for health, goals, weeks, tasks, backlog, notes, recurring, categories
+- `src/lib/api.ts` — API client with typed endpoints for health, goals, weeks, tasks, backlog, notes, recurring, categories, tags
 - `src/lib/scores.ts` — Week completion scoring and staleness styling
 - `src/lib/dates.ts` — Week ID helpers (YYYY-WNN format)
 - `src/lib/health-stats.ts` — Weight data aggregation (weekly/monthly averages)
 - `src/contexts/CategoriesContext.tsx` — Shared categories data
 - `src/components/layout/` — AppLayout, Sidebar, Header (dark mode toggle)
 - `src/components/health/WeightChart.tsx` — Recharts line chart for weight trends
+- `src/components/ui/Modal.tsx` — Shared modal overlay (Escape/backdrop close)
+- `src/components/ui/AutoResizeTextarea.tsx` — Auto-growing textarea for markdown
+- `src/components/goals/NotesSection.tsx` — Shared notes UI (add + list) for task/backlog modals
+- `src/components/goals/TagSelector.tsx` — Tag toggle/create UI filtered by category
 
 ### API Endpoints (Netlify Functions)
 
 - `POST /api/health-sync` — iOS health data sync (API key auth via `HEALTH_SYNC_API_KEY`)
 - `GET /api/health/weight?days=N` — Weight entries (days=0 for all-time)
 - `GET /api/auth-check` — Auth status check (bypass support)
-- `goals-weeks.ts` — Week CRUD + list
+- `goals-weeks.ts` — Week CRUD + list + task reorder
 - `goals-weeks-new.ts` — Week generation wizard data + create
-- `goals-tasks.ts` — Task CRUD + toggle status
-- `goals-backlog.ts` — Backlog CRUD + move to week
+- `goals-tasks.ts` — Task CRUD + toggle status + tags
+- `goals-backlog.ts` — Backlog CRUD + move to week + tags
 - `goals-notes.ts` — Notes CRUD (for tasks and backlog items)
 - `goals-recurring.ts` — Recurring tasks CRUD + toggle active
 - `goals-categories.ts` — Categories CRUD
+- `goals-tags.ts` — Tags CRUD (scoped to categories)
 - `goals-follow-ups.ts` — Follow-ups list
 - `goals-attachments.ts` / `goals-upload.ts` — File attachments via Netlify Blobs
 
 ### Database Schema (`db/schema/`)
 
-One file per table: `weight-entries`, `weeks`, `tasks`, `backlog-items`, `notes`, `recurring-tasks`, `categories`, `follow-ups`, `attachments`, `approved-users`, `user-profiles`
+One file per table: `weight-entries`, `weeks`, `tasks`, `backlog-items`, `notes`, `recurring-tasks`, `categories`, `tags`, `follow-ups`, `attachments`, `approved-users`, `user-profiles`
 
 ## Project Conventions
 
@@ -115,6 +127,17 @@ One file per table: `weight-entries`, `weeks`, `tasks`, `backlog-items`, `notes`
 - Auth: All routes protected via Neon Auth except `POST /api/health-sync` (API key auth)
 - Dark mode: Layout shell (sidebar, header, main container) has dark classes; page content does not yet
 - Page titles set via `usePageTitle` hook in each page component
+
+### Click-to-Edit Modal Pattern
+
+All list pages use a consistent URL-routed modal pattern:
+- Parent page renders list + `<Outlet context={{ refetch, data, setData }} />`
+- Child routes render modal components via nested `<Route>` in App.tsx
+- Modal uses `useParams()` for new vs edit, `useOutletContext()` for optimistic updates
+- Rows are fully clickable (`onClick → navigate`), no per-row action buttons
+- Toast feedback on all mutations via `useToast()`
+- `AutoResizeTextarea` for markdown fields
+- Tags: stored as `text[]` on tasks/backlog items, managed via `TagSelector` component scoped to category
 
 ## Skills Reference
 
