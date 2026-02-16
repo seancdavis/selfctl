@@ -139,7 +139,9 @@ export function WeekView() {
       return a.localeCompare(b)
     })
     for (const key of keys) {
-      sorted.set(key, groups.get(key)!)
+      const group = groups.get(key)!
+      group.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id)
+      sorted.set(key, group)
     }
     return sorted
   }, [tasks])
