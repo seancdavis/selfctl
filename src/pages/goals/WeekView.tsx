@@ -1,7 +1,11 @@
 import { useState, useMemo, useCallback } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate, Link, Outlet } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, Pencil, Check, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Pencil, Check, X, GripVertical } from 'lucide-react'
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { useCategories } from '@/contexts/CategoriesContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -10,6 +14,76 @@ import { formatWeekRange } from '@/lib/dates'
 import { calculatePercentage, getScoreLevel, getScoreClasses, getStalenessClasses } from '@/lib/scores'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { Week, TaskWithCategory } from '@/types'
+
+function SortableTaskRow({
+  task,
+  weekId,
+  onToggle,
+  onNavigate,
+}: {
+  task: TaskWithCategory
+  weekId: string
+  onToggle: (taskId: number, e: React.MouseEvent) => void
+  onNavigate: (path: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: task.id })
+  const style = { transform: CSS.Transform.toString(transform), transition }
+  const stalenessClass = getStalenessClasses(task.stalenessCount)
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={() => onNavigate(`/goals/weekly/${weekId}/tasks/${task.id}`)}
+      className={`flex items-center gap-3 p-3 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
+        stalenessClass ? `border-l-4 ${stalenessClass}` : ''
+      }`}
+    >
+      <div
+        className="flex-shrink-0 cursor-grab text-zinc-600 hover:text-zinc-400 touch-none"
+        {...attributes}
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical className="w-3.5 h-3.5" />
+      </div>
+      <button
+        onClick={(e) => onToggle(task.id, e)}
+        className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
+          task.status === 'completed'
+            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+            : 'border-zinc-600 hover:border-zinc-500'
+        }`}
+        aria-label={task.status === 'completed' ? 'Mark incomplete' : 'Mark complete'}
+      >
+        {task.status === 'completed' && (
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+      </button>
+      <span
+        className={`flex-1 text-sm font-mono transition-colors ${
+          task.status === 'completed'
+            ? 'text-zinc-600 line-through'
+            : 'text-zinc-200'
+        }`}
+      >
+        {task.title}
+      </span>
+      {task.tags?.length > 0 && task.tags.map((tag) => (
+        <span key={tag} className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400/70 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+          {tag}
+        </span>
+      ))}
+      {task.isRecurring && (
+        <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
+          recurring
+        </span>
+      )}
+    </div>
+  )
+}
 
 export function WeekView() {
   const { weekId } = useParams<{ weekId: string }>()
@@ -86,34 +160,34 @@ export function WeekView() {
     }
   }, [setTasks, refetchTasks])
 
-  const handleMoveTask = useCallback(async (
-    taskId: number,
-    categoryKey: string,
-    direction: 'up' | 'down',
-    e: React.MouseEvent,
-  ) => {
-    e.stopPropagation()
-    if (!tasks || !weekId) return
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  )
+
+  const handleDragEnd = useCallback((event: DragEndEvent, categoryKey: string) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !tasks || !weekId) return
 
     const categoryTasks = groupedTasks.get(categoryKey)
     if (!categoryTasks) return
 
-    const idx = categoryTasks.findIndex((t) => t.id === taskId)
-    if (idx < 0) return
-    if (direction === 'up' && idx === 0) return
-    if (direction === 'down' && idx === categoryTasks.length - 1) return
+    const oldIndex = categoryTasks.findIndex((t) => t.id === active.id)
+    const newIndex = categoryTasks.findIndex((t) => t.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
 
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
-    const taskA = categoryTasks[idx]
-    const taskB = categoryTasks[swapIdx]
+    const reorderedCategory = arrayMove(categoryTasks, oldIndex, newIndex)
 
+    // Build new full task list with updated sortOrders
+    const reorderedIds = new Set(reorderedCategory.map((t) => t.id))
     const newTasks = tasks.map((t) => {
-      if (t.id === taskA.id) return { ...t, sortOrder: taskB.sortOrder }
-      if (t.id === taskB.id) return { ...t, sortOrder: taskA.sortOrder }
-      return t
+      if (!reorderedIds.has(t.id)) return t
+      const idx = reorderedCategory.findIndex((rt) => rt.id === t.id)
+      return { ...t, sortOrder: idx }
     })
     setTasks(newTasks)
 
+    // Build full task ID array across all categories for API call
     const allTaskIds: number[] = []
     const newGrouped = new Map<string, TaskWithCategory[]>()
     for (const t of newTasks) {
@@ -135,11 +209,7 @@ export function WeekView() {
       }
     }
 
-    try {
-      await weeksApi.reorder(weekId, allTaskIds)
-    } catch {
-      refetchTasks()
-    }
+    weeksApi.reorder(weekId, allTaskIds).catch(() => refetchTasks())
   }, [tasks, weekId, groupedTasks, setTasks, refetchTasks])
 
   const startEditing = () => {
@@ -337,77 +407,21 @@ export function WeekView() {
             <h2 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest mb-2">
               {category}
             </h2>
-            <div className="bg-zinc-900 rounded-lg border border-zinc-800 divide-y divide-zinc-800">
-              {categoryTasks.map((task, idx) => {
-                const stalenessClass = getStalenessClasses(task.stalenessCount)
-                const isFirst = idx === 0
-                const isLast = idx === categoryTasks.length - 1
-                return (
-                  <div
-                    key={task.id}
-                    onClick={() => navigate(`/goals/weekly/${weekId}/tasks/${task.id}`)}
-                    className={`group flex items-center gap-3 p-3 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
-                      stalenessClass ? `border-l-4 ${stalenessClass}` : ''
-                    }`}
-                  >
-                    <button
-                      onClick={(e) => handleToggleTask(task.id, e)}
-                      className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
-                        task.status === 'completed'
-                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                          : 'border-zinc-600 hover:border-zinc-500'
-                      }`}
-                      aria-label={task.status === 'completed' ? 'Mark incomplete' : 'Mark complete'}
-                    >
-                      {task.status === 'completed' && (
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                    <span
-                      className={`flex-1 text-sm font-mono transition-colors ${
-                        task.status === 'completed'
-                          ? 'text-zinc-600 line-through'
-                          : 'text-zinc-200'
-                      }`}
-                    >
-                      {task.title}
-                    </span>
-                    {task.tags?.length > 0 && task.tags.map((tag) => (
-                      <span key={tag} className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400/70 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-                        {tag}
-                      </span>
-                    ))}
-                    {task.isRecurring && (
-                      <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-1.5 py-0.5 rounded">
-                        recurring
-                      </span>
-                    )}
-                    {categoryTasks.length > 1 && (
-                      <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => handleMoveTask(task.id, category, 'up', e)}
-                          disabled={isFirst}
-                          className="p-0.5 text-zinc-600 hover:text-zinc-300 disabled:opacity-0 transition-colors"
-                          aria-label="Move up"
-                        >
-                          <ChevronUp className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={(e) => handleMoveTask(task.id, category, 'down', e)}
-                          disabled={isLast}
-                          className="p-0.5 text-zinc-600 hover:text-zinc-300 disabled:opacity-0 transition-colors"
-                          aria-label="Move down"
-                        >
-                          <ChevronDown className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => handleDragEnd(event, category)}>
+              <SortableContext items={categoryTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                <div className="bg-zinc-900 rounded-lg border border-zinc-800 divide-y divide-zinc-800">
+                  {categoryTasks.map((task) => (
+                    <SortableTaskRow
+                      key={task.id}
+                      task={task}
+                      weekId={weekId}
+                      onToggle={handleToggleTask}
+                      onNavigate={navigate}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
         ))}
       </div>

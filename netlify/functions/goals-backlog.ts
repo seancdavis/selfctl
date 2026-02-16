@@ -72,6 +72,7 @@ export default async (req: Request, context: Context) => {
           title: item.title,
           contentMarkdown: item.contentMarkdown,
           contentHtml: item.contentHtml,
+          tags: item.tags ?? [],
         })
         .returning()
 

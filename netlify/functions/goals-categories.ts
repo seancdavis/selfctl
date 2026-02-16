@@ -29,7 +29,7 @@ export default async (req: Request, context: Context) => {
 
     // PATCH /api/goals-categories/:id
     if (req.method === 'PATCH') {
-      let body: { name?: string; parentId?: number | null }
+      let body: { name?: string; description?: string | null; parentId?: number | null }
       try {
         body = await req.json()
       } catch {
@@ -46,6 +46,7 @@ export default async (req: Request, context: Context) => {
 
       const updates: Record<string, unknown> = {}
       if (body.name !== undefined) updates.name = body.name
+      if (body.description !== undefined) updates.description = body.description
       if (body.parentId !== undefined) updates.parentId = body.parentId
 
       const [updated] = await db
@@ -82,7 +83,7 @@ export default async (req: Request, context: Context) => {
 
   // POST /api/goals-categories
   if (req.method === 'POST') {
-    let body: { name: string; parentId?: number | null }
+    let body: { name: string; description?: string | null; parentId?: number | null }
     try {
       body = await req.json()
     } catch {
@@ -97,6 +98,7 @@ export default async (req: Request, context: Context) => {
       .insert(schema.categories)
       .values({
         name: body.name,
+        description: body.description || null,
         parentId: body.parentId || null,
       })
       .returning()

@@ -29,6 +29,13 @@
       "when": 1771200000000,
       "tag": "20260216000000_flexible_weeks",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771244090952,
+      "tag": "20260216121450_naive_shotgun",
+      "breakpoints": true
     }
   ]
 }

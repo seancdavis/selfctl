@@ -17,6 +17,7 @@ export const recurringTasks = pgTable('recurring_tasks', {
   title: varchar('title', { length: 500 }).notNull(),
   contentMarkdown: text('content_markdown'),
   contentHtml: text('content_html'),
+  tags: text('tags').array(),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

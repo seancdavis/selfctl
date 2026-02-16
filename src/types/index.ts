@@ -41,6 +41,7 @@ export interface Week {
 export interface Category {
   id: number
   name: string
+  description: string | null
   parentId: number | null
   createdAt: string
 }
@@ -72,6 +73,7 @@ export interface RecurringTask {
   title: string
   contentMarkdown: string | null
   contentHtml: string | null
+  tags: string[]
   isActive: boolean
   createdAt: string
   updatedAt: string

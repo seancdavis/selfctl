@@ -95,7 +95,7 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
               className="bg-zinc-800/50 rounded border border-zinc-700/50 p-3"
             >
               <div
-                className="prose prose-sm prose-invert max-w-none text-zinc-400"
+                className="prose prose-sm prose-invert max-w-none text-zinc-400 markdown-content"
                 dangerouslySetInnerHTML={{ __html: note.contentHtml }}
               />
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-zinc-700/50">

@@ -34,10 +34,15 @@ export function Recurring() {
               {category.name}
             </span>
           )}
+          {task.tags?.length > 0 && task.tags.map((tag) => (
+            <span key={tag} className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400/70 border border-emerald-500/20 px-1.5 py-0.5 rounded shrink-0">
+              {tag}
+            </span>
+          ))}
         </div>
         {task.contentHtml && (
           <div
-            className="mt-1.5 text-xs font-mono text-zinc-500 line-clamp-2 prose prose-sm prose-invert max-w-none [&>*]:m-0"
+            className="mt-1.5 text-xs font-mono text-zinc-500 line-clamp-2 prose prose-sm prose-invert max-w-none [&>*]:m-0 markdown-content"
             dangerouslySetInnerHTML={{ __html: task.contentHtml }}
           />
         )}

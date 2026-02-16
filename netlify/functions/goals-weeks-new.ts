@@ -166,6 +166,7 @@ export default async (req: Request, context: Context) => {
             title: rt.title,
             contentMarkdown: rt.contentMarkdown,
             contentHtml: rt.contentHtml,
+            tags: rt.tags ?? [],
             isRecurring: true,
           })
           .returning()
@@ -191,6 +192,7 @@ export default async (req: Request, context: Context) => {
               title: prevTask.title,
               contentMarkdown: prevTask.contentMarkdown,
               contentHtml: prevTask.contentHtml,
+              tags: prevTask.tags ?? [],
               isRecurring: prevTask.isRecurring,
               stalenessCount: prevTask.stalenessCount + 1,
               previousVersionId: prevTask.id,
@@ -247,6 +249,7 @@ export default async (req: Request, context: Context) => {
               title: item.title,
               contentMarkdown: item.contentMarkdown,
               contentHtml: item.contentHtml,
+              tags: item.tags ?? [],
             })
             .returning()
           createdTasks.push(task)

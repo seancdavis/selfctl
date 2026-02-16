@@ -67,6 +67,7 @@ export default async (req: Request, context: Context) => {
         title?: string
         categoryId?: number | null
         contentMarkdown?: string | null
+        tags?: string[]
         isActive?: boolean
       }
       try {
@@ -88,6 +89,7 @@ export default async (req: Request, context: Context) => {
 
         if (body.title !== undefined) updates.title = body.title
         if (body.categoryId !== undefined) updates.categoryId = body.categoryId
+        if (body.tags !== undefined) updates.tags = body.tags
         if (body.isActive !== undefined) updates.isActive = body.isActive
         if (body.contentMarkdown !== undefined) {
           updates.contentMarkdown = body.contentMarkdown
@@ -148,6 +150,7 @@ export default async (req: Request, context: Context) => {
       title: string
       categoryId?: number | null
       contentMarkdown?: string | null
+      tags?: string[]
     }
     try {
       body = await req.json()
@@ -171,6 +174,7 @@ export default async (req: Request, context: Context) => {
           categoryId: body.categoryId || null,
           contentMarkdown: body.contentMarkdown || null,
           contentHtml,
+          tags: body.tags || [],
         })
         .returning()
 

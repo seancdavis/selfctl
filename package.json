@@ -15,6 +15,9 @@
     "db:studio": "netlify dev:exec drizzle-kit studio"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@neondatabase/neon-js": "^0.1.0-beta.22",
     "@neondatabase/serverless": "^1.0.2",
     "@neondatabase/toolkit": "^0.1.2",

@@ -33,8 +33,7 @@ export function TagSelector({ categoryId, selectedTags, onChange }: TagSelectorP
     }
   }
 
-  const handleCreateTag = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleCreateTag = async () => {
     if (!newTagName.trim() || !categoryId) return
 
     setCreating(true)
@@ -90,17 +89,19 @@ export function TagSelector({ categoryId, selectedTags, onChange }: TagSelectorP
       </div>
 
       {showNewTag && (
-        <form onSubmit={handleCreateTag} className="flex items-center gap-2 mt-2">
+        <div className="flex items-center gap-2 mt-2">
           <input
             type="text"
             value={newTagName}
             onChange={(e) => setNewTagName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateTag() } }}
             placeholder="new tag name"
             className="flex-1 px-2 py-1 border border-zinc-700 bg-zinc-900 rounded text-xs font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/20"
             autoFocus
           />
           <button
-            type="submit"
+            type="button"
+            onClick={handleCreateTag}
             disabled={!newTagName.trim() || creating}
             className="px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-mono rounded hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
           >
@@ -116,7 +117,7 @@ export function TagSelector({ categoryId, selectedTags, onChange }: TagSelectorP
           >
             <X className="w-3.5 h-3.5" />
           </button>
-        </form>
+        </div>
       )}
     </div>
   )
