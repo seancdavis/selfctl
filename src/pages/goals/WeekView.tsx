@@ -7,7 +7,6 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useAsyncData } from '@/hooks/useAsyncData'
-import { useCategories } from '@/contexts/CategoriesContext'
 import { useToast } from '@/contexts/ToastContext'
 import { weeksApi, tasksApi } from '@/lib/api'
 import { formatWeekRange } from '@/lib/dates'
@@ -106,7 +105,6 @@ export function WeekView() {
   usePageTitle(weekId ? `Week ${weekId}` : 'Week')
   const navigate = useNavigate()
   const toast = useToast()
-  const { data: categories } = useCategories()
 
   const [editing, setEditing] = useState(false)
   const [editLabel, setEditLabel] = useState('')

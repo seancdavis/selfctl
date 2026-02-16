@@ -34,7 +34,7 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
         }
       })
     )
-    setAttachmentsByNote(new Map(results))
+    setAttachmentsByNote(new Map(results.map(([id, attachments]) => [id, [...attachments]])))
   }, [])
 
   useEffect(() => {

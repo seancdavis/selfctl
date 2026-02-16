@@ -95,7 +95,7 @@ export function TaskModal() {
         const category = categories?.find((c) => c.id === data.categoryId) ?? null
         setTasks((prev) => [
           ...(prev ?? []),
-          { ...created, category },
+          { ...created, category, noteCount: 0 },
         ])
         toast.success('task created')
       }
