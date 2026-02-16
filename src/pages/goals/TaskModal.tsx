@@ -87,11 +87,16 @@ export function TaskModal() {
         )
         toast.success('task updated')
       } else {
-        await tasksApi.create({
+        const created = await tasksApi.create({
           weekId,
           ...data,
           status: 'pending',
         })
+        const category = categories?.find((c) => c.id === data.categoryId) ?? null
+        setTasks((prev) => [
+          ...(prev ?? []),
+          { ...created, category },
+        ])
         toast.success('task created')
       }
       close()

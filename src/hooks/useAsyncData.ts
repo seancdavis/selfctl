@@ -18,9 +18,12 @@ export function useAsyncData<T>(
   const [loading, setLoading] = useState(options?.immediate !== false)
   const [error, setError] = useState<string | null>(null)
   const mountedRef = useRef(true)
+  const hasFetchedRef = useRef(false)
 
   const fetchData = useCallback(async () => {
-    setLoading(true)
+    if (!hasFetchedRef.current) {
+      setLoading(true)
+    }
     setError(null)
     try {
       const result = await fetcher()
@@ -34,6 +37,7 @@ export function useAsyncData<T>(
     } finally {
       if (mountedRef.current) {
         setLoading(false)
+        hasFetchedRef.current = true
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
