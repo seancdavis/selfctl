@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useParams, useNavigate, Link, Outlet } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Plus, Pencil, Check, X, GripVertical, MessageSquare } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Pencil, Check, X, GripVertical, MessageSquare, AlertTriangle } from 'lucide-react'
 import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
@@ -50,21 +50,27 @@ function SortableTaskRow({
         <button
           onClick={(e) => onToggle(task.id, e)}
           className={`w-4 h-4 rounded-sm border flex-shrink-0 flex items-center justify-center transition-all ${
-            task.status === 'completed'
+            task.skipped
+              ? 'bg-amber-500/20 border-amber-500 text-amber-400'
+              : task.status === 'completed'
               ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
               : 'border-zinc-600 hover:border-zinc-500'
           }`}
-          aria-label={task.status === 'completed' ? 'Mark incomplete' : 'Mark complete'}
+          aria-label={task.skipped ? 'Skipped' : task.status === 'completed' ? 'Mark incomplete' : 'Mark complete'}
         >
-          {task.status === 'completed' && (
+          {task.skipped ? (
+            <AlertTriangle className="w-3 h-3" />
+          ) : task.status === 'completed' ? (
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
-          )}
+          ) : null}
         </button>
         <span
           className={`flex-1 text-sm font-mono transition-colors ${
-            task.status === 'completed'
+            task.skipped
+              ? 'text-zinc-600'
+              : task.status === 'completed'
               ? 'text-zinc-600 line-through'
               : 'text-zinc-200'
           }`}
@@ -91,7 +97,7 @@ function SortableTaskRow({
       {task.contentHtml && (
         <div
           className={`ml-[3.25rem] mt-1 text-xs font-mono markdown-content ${
-            task.status === 'completed' ? 'text-zinc-700' : 'text-zinc-500'
+            task.skipped || task.status === 'completed' ? 'text-zinc-700' : 'text-zinc-500'
           }`}
           dangerouslySetInnerHTML={{ __html: task.contentHtml }}
         />

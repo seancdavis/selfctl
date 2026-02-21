@@ -27,6 +27,7 @@ export const tasks = pgTable('tasks', {
   contentMarkdown: text('content_markdown'),
   contentHtml: text('content_html'),
   status: taskStatusEnum('status').notNull().default('pending'),
+  skipped: boolean('skipped').notNull().default(false),
   isRecurring: boolean('is_recurring').notNull().default(false),
   stalenessCount: integer('staleness_count').notNull().default(0),
   tags: text('tags').array().notNull().default(sql`'{}'::text[]`),

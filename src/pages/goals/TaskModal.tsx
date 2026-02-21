@@ -39,6 +39,7 @@ export function TaskModal() {
   const [saving, setSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [togglingStatus, setTogglingStatus] = useState(false)
+  const [togglingSkip, setTogglingSkip] = useState(false)
 
   const {
     data: notes,
@@ -142,6 +143,23 @@ export function TaskModal() {
     }
   }
 
+  const handleToggleSkip = async () => {
+    if (!task) return
+    setTogglingSkip(true)
+    try {
+      const updated = await tasksApi.toggleSkip(task.id)
+      setTask({ ...task, skipped: updated.skipped })
+      setTasks((prev) =>
+        prev?.map((t) => (t.id === task.id ? { ...t, skipped: updated.skipped } : t)) ?? null
+      )
+      toast.success(updated.skipped ? 'task skipped' : 'task unskipped')
+    } catch {
+      toast.error('failed to toggle skip')
+    } finally {
+      setTogglingSkip(false)
+    }
+  }
+
   return (
     <Modal
       isOpen
@@ -159,12 +177,14 @@ export function TaskModal() {
             <div className="flex items-center gap-2 mb-4">
               <span
                 className={`text-[10px] font-mono px-2 py-0.5 rounded font-medium ${
-                  task.status === 'completed'
+                  task.skipped
+                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                    : task.status === 'completed'
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     : 'bg-zinc-800 text-zinc-500 border border-zinc-700'
                 }`}
               >
-                {task.status === 'completed' ? 'completed' : 'pending'}
+                {task.skipped ? 'skipped' : task.status === 'completed' ? 'completed' : 'pending'}
               </span>
               {task.stalenessCount > 0 && (
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded border-l-2 ${getStalenessClasses(task.stalenessCount)}`}>
@@ -232,6 +252,18 @@ export function TaskModal() {
                         : task.status === 'completed'
                         ? 'mark incomplete'
                         : 'mark complete'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleToggleSkip}
+                      disabled={togglingSkip}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-zinc-400 hover:text-amber-400 transition-colors disabled:opacity-40"
+                    >
+                      {togglingSkip
+                        ? 'updating...'
+                        : task.skipped
+                        ? 'unskip'
+                        : 'skip'}
                     </button>
                     <button
                       type="button"

@@ -31,8 +31,9 @@ export default async (req: Request, context: Context) => {
   const lastSegment = pathSegments[pathSegments.length - 1]
 
   // POST /api/assistant/tasks/:id/toggle
+  // POST /api/assistant/tasks/:id/skip
   if (id) {
-    if (lastSegment !== 'toggle') return notFound()
+    if (lastSegment !== 'toggle' && lastSegment !== 'skip') return notFound()
     if (req.method !== 'POST') return methodNotAllowed()
 
     const taskId = parseInt(id, 10)
@@ -43,6 +44,16 @@ export default async (req: Request, context: Context) => {
       .limit(1)
 
     if (!task) return notFound('Task not found')
+
+    if (lastSegment === 'skip') {
+      const [updated] = await db
+        .update(schema.tasks)
+        .set({ skipped: !task.skipped, updatedAt: new Date() })
+        .where(eq(schema.tasks.id, taskId))
+        .returning()
+
+      return json(updated)
+    }
 
     const newStatus = task.status === 'pending' ? 'completed' : 'pending'
 
@@ -90,6 +101,7 @@ export default async (req: Request, context: Context) => {
         id: row.task.id,
         title: row.task.title,
         status: row.task.status,
+        skipped: row.task.skipped,
         category: row.category?.name ?? null,
         tags: row.task.tags ?? [],
       })),
@@ -179,6 +191,7 @@ export const config: Config = {
   path: [
     '/api/assistant/tasks',
     '/api/assistant/tasks/:id/toggle',
+    '/api/assistant/tasks/:id/skip',
     '/api/assistant/notes',
     '/api/assistant/backlog',
   ],
