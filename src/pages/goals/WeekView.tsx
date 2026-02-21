@@ -341,8 +341,8 @@ export function WeekView() {
 
   return (
     <div>
-      {/* Sticky week header */}
-      <div className="sticky top-0 z-10 bg-zinc-950 pb-3">
+      {/* Sticky week header — z-20 to stay above dnd-kit stacking contexts, negative margins extend bg across main's p-6 padding */}
+      <div className="sticky top-0 z-20 bg-zinc-950 -mx-6 px-6 -mt-6 pt-6 pb-3">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
