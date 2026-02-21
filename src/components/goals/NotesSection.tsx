@@ -116,25 +116,6 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
     <div className="mt-6 border-t border-zinc-800 pt-4">
       <h3 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest mb-3">Notes</h3>
 
-      <form onSubmit={handleAddNote} className="mb-4">
-        <AutoResizeTextarea
-          value={noteContent}
-          onChange={(e) => setNoteContent(e.target.value)}
-          placeholder="add a note (markdown supported)..."
-          minRows={2}
-          className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-        />
-        <div className="flex justify-end mt-2">
-          <button
-            type="submit"
-            disabled={!noteContent.trim() || addingNote}
-            className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium rounded hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
-          >
-            {addingNote ? 'adding...' : 'add note'}
-          </button>
-        </div>
-      </form>
-
       {notesLoading && (
         <div className="flex justify-center py-4">
           <LoadingSpinner size="sm" />
@@ -225,6 +206,25 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
           })}
         </div>
       )}
+
+      <form onSubmit={handleAddNote} className="mt-4">
+        <AutoResizeTextarea
+          value={noteContent}
+          onChange={(e) => setNoteContent(e.target.value)}
+          placeholder="add a note (markdown supported)..."
+          minRows={2}
+          className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+        />
+        <div className="flex justify-end mt-2">
+          <button
+            type="submit"
+            disabled={!noteContent.trim() || addingNote}
+            className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium rounded hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
+          >
+            {addingNote ? 'adding...' : 'add note'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
