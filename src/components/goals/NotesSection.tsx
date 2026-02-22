@@ -12,9 +12,10 @@ interface NotesSectionProps {
   refetchNotes: () => Promise<void>
   taskId?: number
   backlogItemId?: number
+  onNoteCountChange?: (delta: number) => void
 }
 
-export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlogItemId }: NotesSectionProps) {
+export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlogItemId, onNoteCountChange }: NotesSectionProps) {
   const toast = useToast()
   const [noteContent, setNoteContent] = useState('')
   const [addingNote, setAddingNote] = useState(false)
@@ -58,6 +59,7 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
       })
       setNoteContent('')
       refetchNotes()
+      onNoteCountChange?.(1)
       toast.success('note added')
     } catch {
       toast.error('failed to add note')
@@ -71,6 +73,7 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
     try {
       await notesApi.delete(noteId)
       refetchNotes()
+      onNoteCountChange?.(-1)
       toast.success('note deleted')
     } catch {
       toast.error('failed to delete note')
