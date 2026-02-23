@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "netlify dev:exec drizzle-kit migrate",
+    "db:migrate:staging": "node scripts/migrate-staging.js",
     "db:migrate:prod": "node scripts/migrate-production.js --production",
     "db:studio": "netlify dev:exec drizzle-kit studio"
   },
