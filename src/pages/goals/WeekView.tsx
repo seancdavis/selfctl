@@ -341,117 +341,120 @@ export function WeekView() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          {editing ? (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-blue-400 text-xl font-bold font-mono">$</span>
-                <span className="text-xl font-mono font-bold text-zinc-100">week::</span>
-                <input
-                  type="text"
-                  value={editLabel}
-                  onChange={(e) => setEditLabel(e.target.value)}
-                  className="w-24 px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xl font-mono font-bold text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={editStartDate}
-                  onChange={(e) => setEditStartDate(e.target.value)}
-                  className="px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xs font-mono text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                />
-                <span className="text-xs font-mono text-zinc-600">to</span>
-                <input
-                  type="date"
-                  value={editEndDate}
-                  onChange={(e) => setEditEndDate(e.target.value)}
-                  className="px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xs font-mono text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
-                />
-                <button
-                  onClick={handleSaveEdit}
-                  disabled={editSaving || !editLabel.trim()}
-                  className="p-1 text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors"
-                  title="Save"
-                >
-                  <Check className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={cancelEditing}
-                  className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
-                  title="Cancel"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2">
-                  <span className="text-blue-400">$</span> week::{week.label}
-                </h1>
-                <button
-                  onClick={startEditing}
-                  className="p-1 text-zinc-600 hover:text-zinc-400 transition-colors"
-                  title="Edit week"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </button>
-                {totalTasks > 0 && (
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border ${scoreClasses}`}
+      {/* Sticky week header — z-30 to stay above dnd-kit stacking contexts, negative margins extend bg across scroll container padding */}
+      <div className="sticky top-0 z-30 bg-zinc-950 -mx-6 px-6 -mt-6 pt-6 pb-3">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            {editing ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-400 text-xl font-bold font-mono">$</span>
+                  <span className="text-xl font-mono font-bold text-zinc-100">week::</span>
+                  <input
+                    type="text"
+                    value={editLabel}
+                    onChange={(e) => setEditLabel(e.target.value)}
+                    className="w-24 px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xl font-mono font-bold text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={editStartDate}
+                    onChange={(e) => setEditStartDate(e.target.value)}
+                    className="px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xs font-mono text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+                  />
+                  <span className="text-xs font-mono text-zinc-600">to</span>
+                  <input
+                    type="date"
+                    value={editEndDate}
+                    onChange={(e) => setEditEndDate(e.target.value)}
+                    className="px-2 py-0.5 border border-zinc-700 bg-zinc-900 rounded text-xs font-mono text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+                  />
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={editSaving || !editLabel.trim()}
+                    className="p-1 text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors"
+                    title="Save"
                   >
-                    {percentage}%{level === 'fire' && ' \uD83D\uDD25'}
-                  </span>
-                )}
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <p className="text-xs font-mono text-zinc-600 mt-0.5">
-                {formatWeekRange(week.startDate, week.endDate)}
-              </p>
-            </>
-          )}
+            ) : (
+              <>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2">
+                    <span className="text-blue-400">$</span> week::{week.label}
+                  </h1>
+                  <button
+                    onClick={startEditing}
+                    className="p-1 text-zinc-600 hover:text-zinc-400 transition-colors"
+                    title="Edit week"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  {totalTasks > 0 && (
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border ${scoreClasses}`}
+                    >
+                      {percentage}%{level === 'fire' && ' \uD83D\uDD25'}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs font-mono text-zinc-600 mt-0.5">
+                  {formatWeekRange(week.startDate, week.endDate)}
+                </p>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            {prevWeek ? (
+              <Link
+                to={`/goals/weekly/${prevWeek.label}`}
+                className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
+                title={`Previous: ${prevWeek.label}`}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Link>
+            ) : (
+              <span className="p-2 text-zinc-800">
+                <ChevronLeft className="w-4 h-4" />
+              </span>
+            )}
+            {nextWeek ? (
+              <Link
+                to={`/goals/weekly/${nextWeek.label}`}
+                className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
+                title={`Next: ${nextWeek.label}`}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <span className="p-2 text-zinc-800">
+                <ChevronRight className="w-4 h-4" />
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          {prevWeek ? (
-            <Link
-              to={`/goals/weekly/${prevWeek.label}`}
-              className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
-              title={`Previous: ${prevWeek.label}`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Link>
-          ) : (
-            <span className="p-2 text-zinc-800">
-              <ChevronLeft className="w-4 h-4" />
-            </span>
-          )}
-          {nextWeek ? (
-            <Link
-              to={`/goals/weekly/${nextWeek.label}`}
-              className="p-2 text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
-              title={`Next: ${nextWeek.label}`}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          ) : (
-            <span className="p-2 text-zinc-800">
-              <ChevronRight className="w-4 h-4" />
-            </span>
-          )}
-        </div>
+        {/* Task summary */}
+        <p className="text-xs font-mono text-zinc-600 mt-2">
+          {completedTasks} of {totalTasks} tasks completed
+        </p>
       </div>
 
-      {/* Task summary */}
-      <p className="text-xs font-mono text-zinc-600 mt-2">
-        {completedTasks} of {totalTasks} tasks completed
-      </p>
-
       {/* Task groups */}
-      <div className="mt-6 space-y-6">
+      <div className="mt-4 space-y-6">
         {groupedTasks.size === 0 && (
           <div className="text-center py-8 text-zinc-600 font-mono text-sm">
             no tasks this week
