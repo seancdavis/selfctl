@@ -92,6 +92,8 @@ export const tasksApi = {
     request<void>(`/goals-tasks/${id}`, { method: 'DELETE' }),
   toggleStatus: (id: number) =>
     request<Task>(`/goals-tasks/${id}/toggle`, { method: 'POST' }),
+  toggleSkip: (id: number) =>
+    request<Task>(`/goals-tasks/${id}/skip`, { method: 'POST' }),
   moveToBacklog: (id: number) =>
     request<BacklogItem>(`/goals-tasks/${id}/to-backlog`, { method: 'POST' }),
 }

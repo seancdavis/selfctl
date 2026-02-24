@@ -72,6 +72,27 @@ export default async (req: Request, context: Context) => {
       return json(updated)
     }
 
+    // POST /api/goals-tasks/:id/skip
+    if (lastSegment === 'skip') {
+      if (req.method !== 'POST') return methodNotAllowed()
+
+      const [task] = await db
+        .select()
+        .from(schema.tasks)
+        .where(eq(schema.tasks.id, taskId))
+        .limit(1)
+
+      if (!task) return notFound('Task not found')
+
+      const [updated] = await db
+        .update(schema.tasks)
+        .set({ skipped: !task.skipped, updatedAt: new Date() })
+        .where(eq(schema.tasks.id, taskId))
+        .returning()
+
+      return json(updated)
+    }
+
     // POST /api/goals-tasks/:id/to-backlog
     if (lastSegment === 'to-backlog') {
       if (req.method !== 'POST') return methodNotAllowed()
@@ -303,6 +324,7 @@ export const config: Config = {
     '/api/goals-tasks',
     '/api/goals-tasks/:id',
     '/api/goals-tasks/:id/toggle',
+    '/api/goals-tasks/:id/skip',
     '/api/goals-tasks/:id/to-backlog',
     '/api/goals-tasks/:taskId/notes',
   ],

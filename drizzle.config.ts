@@ -8,6 +8,6 @@ export default defineConfig({
   schema: './db/schema/index.ts',
   out: './migrations',
   migrations: {
-    prefix: 'timestamp',
+    prefix: 'unix',
   },
 })
