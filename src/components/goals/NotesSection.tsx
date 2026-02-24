@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Trash2, ImagePlus, X as XIcon } from 'lucide-react'
+import { Trash2, ImagePlus, X as XIcon, Pencil } from 'lucide-react'
 import { AutoResizeTextarea } from '@/components/ui/AutoResizeTextarea'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { notesApi, attachmentsApi } from '@/lib/api'
@@ -12,13 +12,17 @@ interface NotesSectionProps {
   refetchNotes: () => Promise<void>
   taskId?: number
   backlogItemId?: number
+  onNoteCountChange?: (delta: number) => void
 }
 
-export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlogItemId }: NotesSectionProps) {
+export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlogItemId, onNoteCountChange }: NotesSectionProps) {
   const toast = useToast()
   const [noteContent, setNoteContent] = useState('')
   const [addingNote, setAddingNote] = useState(false)
   const [deletingNoteId, setDeletingNoteId] = useState<number | null>(null)
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null)
+  const [editContent, setEditContent] = useState('')
+  const [savingNote, setSavingNote] = useState(false)
   const [attachmentsByNote, setAttachmentsByNote] = useState<Map<number, Attachment[]>>(new Map())
   const [uploadingNoteId, setUploadingNoteId] = useState<number | null>(null)
   const fileInputRefs = useRef<Map<number, HTMLInputElement>>(new Map())
@@ -58,6 +62,7 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
       })
       setNoteContent('')
       refetchNotes()
+      onNoteCountChange?.(1)
       toast.success('note added')
     } catch {
       toast.error('failed to add note')
@@ -71,11 +76,39 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
     try {
       await notesApi.delete(noteId)
       refetchNotes()
+      onNoteCountChange?.(-1)
       toast.success('note deleted')
     } catch {
       toast.error('failed to delete note')
     } finally {
       setDeletingNoteId(null)
+    }
+  }
+
+  const handleStartEdit = (note: Note) => {
+    setEditingNoteId(note.id)
+    setEditContent(note.contentMarkdown)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null)
+    setEditContent('')
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingNoteId || !editContent.trim()) return
+
+    setSavingNote(true)
+    try {
+      await notesApi.update(editingNoteId, { contentMarkdown: editContent.trim() })
+      setEditingNoteId(null)
+      setEditContent('')
+      refetchNotes()
+      toast.success('note updated')
+    } catch {
+      toast.error('failed to update note')
+    } finally {
+      setSavingNote(false)
     }
   }
 
@@ -135,10 +168,37 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
                 key={note.id}
                 className="bg-zinc-800/50 rounded border border-zinc-700/50 p-3"
               >
-                <div
-                  className="prose prose-sm prose-invert max-w-none text-zinc-400 markdown-content"
-                  dangerouslySetInnerHTML={{ __html: note.contentHtml }}
-                />
+                {editingNoteId === note.id ? (
+                  <>
+                    <AutoResizeTextarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      minRows={2}
+                      className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+                    />
+                    <div className="flex items-center justify-end gap-2 mt-2">
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={savingNote}
+                        className="px-3 py-1 text-xs font-mono text-zinc-400 border border-zinc-700 rounded hover:bg-zinc-800 disabled:opacity-40 transition-colors"
+                      >
+                        cancel
+                      </button>
+                      <button
+                        onClick={handleSaveEdit}
+                        disabled={!editContent.trim() || savingNote}
+                        className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium rounded hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
+                      >
+                        {savingNote ? 'saving...' : 'save'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className="prose prose-sm prose-invert max-w-none text-zinc-400 markdown-content"
+                      dangerouslySetInnerHTML={{ __html: note.contentHtml }}
+                    />
                 {noteAttachments.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {noteAttachments.map((attachment) => (
@@ -192,6 +252,13 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
                       <ImagePlus className="w-3.5 h-3.5" />
                     </button>
                     <button
+                      onClick={() => handleStartEdit(note)}
+                      className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                      title="Edit note"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
                       onClick={() => handleDeleteNote(note.id)}
                       disabled={deletingNoteId === note.id}
                       className="text-zinc-600 hover:text-red-400 transition-colors disabled:opacity-40"
@@ -201,6 +268,8 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
                     </button>
                   </div>
                 </div>
+                  </>
+                )}
               </div>
             )
           })}

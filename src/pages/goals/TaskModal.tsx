@@ -322,6 +322,13 @@ export function TaskModal() {
               notesLoading={notesLoading}
               refetchNotes={refetchNotes}
               taskId={taskIdNum}
+              onNoteCountChange={(delta) => {
+                setTasks((prev) =>
+                  prev?.map((t) =>
+                    t.id === taskIdNum ? { ...t, noteCount: t.noteCount + delta } : t
+                  ) ?? null
+                )
+              }}
             />
           )}
         </>
