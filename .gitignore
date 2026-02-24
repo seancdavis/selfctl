@@ -28,3 +28,8 @@ dist-ssr
 
 # Temp
 tmp/
+
+# Environment variables
+.env*
+.env.local
+.envrc
