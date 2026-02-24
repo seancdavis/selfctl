@@ -1,0 +1,1 @@
+ALTER TABLE "tasks" ADD COLUMN "skipped" boolean DEFAULT false NOT NULL;

@@ -54,6 +54,7 @@ export interface Task {
   contentMarkdown: string | null
   contentHtml: string | null
   status: TaskStatus
+  skipped: boolean
   isRecurring: boolean
   stalenessCount: number
   tags: string[]
