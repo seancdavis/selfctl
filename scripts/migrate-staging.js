@@ -13,7 +13,7 @@ console.log('This uses the Neon branch database for deploy previews.\n')
 rl.question('Type "yes" to confirm: ', (answer) => {
   if (answer === 'yes') {
     console.log('\nRunning staging migration...\n')
-    execSync('netlify dev:exec drizzle-kit migrate', { stdio: 'inherit' })
+    execSync('netlify dev:exec --context deploy-preview drizzle-kit migrate', { stdio: 'inherit' })
   } else {
     console.log('\nMigration cancelled.')
   }
