@@ -12,6 +12,9 @@ import type {
   WeightEntry,
   WeekGenerationData,
   GenerateWeekPayload,
+  RunningActivity,
+  RunningStats,
+  Race,
 } from '@/types'
 
 const API_BASE = '/api'
@@ -214,4 +217,26 @@ export const weekGenerationApi = {
     ),
   generate: (payload: GenerateWeekPayload) =>
     request<Week>('/goals-weeks-new', { method: 'POST', body: JSON.stringify(payload) }),
+}
+
+// Running Activities API
+export const runningApi = {
+  list: (days = 90) =>
+    request<RunningActivity[]>(`/running-activities?days=${days}`),
+  stats: (year?: number) =>
+    request<RunningStats>(year ? `/running-activities/stats?year=${year}` : '/running-activities/stats'),
+  get: (id: number) =>
+    request<RunningActivity>(`/running-activities/${id}`),
+}
+
+// Races API
+export const racesApi = {
+  list: () => request<Race[]>('/running-races'),
+  get: (id: number) => request<Race>(`/running-races/${id}`),
+  create: (data: Partial<Race>) =>
+    request<Race>('/running-races', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number, data: Partial<Race>) =>
+    request<Race>(`/running-races/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: number) =>
+    request<void>(`/running-races/${id}`, { method: 'DELETE' }),
 }

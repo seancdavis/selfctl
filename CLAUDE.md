@@ -71,6 +71,10 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 /goals/recurring                     Recurring Tasks (CRUD, pause/resume)
   /new                               → Recurring task add modal (nested)
   /:taskId                           → Recurring task edit modal (nested)
+/running                             Running mileage tracking + activity log
+/running/races                       Race list (upcoming + past)
+  /new                               → Race add modal (nested)
+  /:raceId                           → Race edit modal (nested)
 /settings/categories                 Categories (CRUD, tag management)
   /new                               → Category add modal (nested)
   /:id                               → Category edit modal (nested, tags, delete)
@@ -83,7 +87,7 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 - `src/hooks/useAsyncData.ts` — Generic data fetching hook with refetch (background, no loading flash) and setData
 - `src/hooks/usePageTitle.ts` — Dynamic `<title>` (`Page | Dashboard`)
 - `src/hooks/useDarkMode.ts` — Dark mode with localStorage + system preference
-- `src/lib/api.ts` — API client with typed endpoints for health, goals, weeks, tasks, backlog, notes, recurring, categories, tags
+- `src/lib/api.ts` — API client with typed endpoints for health, goals, weeks, tasks, backlog, notes, recurring, categories, tags, running, races
 - `src/lib/scores.ts` — Week completion scoring and staleness styling
 - `src/lib/dates.ts` — Week label helpers (YYYY-NN format), date suggestions for wizard
 - `src/lib/health-stats.ts` — Weight data aggregation (weekly/monthly averages)
@@ -94,6 +98,11 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 - `src/components/ui/AutoResizeTextarea.tsx` — Auto-growing textarea for markdown
 - `src/components/goals/NotesSection.tsx` — Shared notes UI (add + list) for task/backlog modals
 - `src/components/goals/TagSelector.tsx` — Tag toggle/create UI filtered by category
+- `src/lib/running-stats.ts` — Running format helpers (pace, duration, distance), race presets
+- `src/components/running/MileageChart.tsx` — Recharts bar chart for weekly mileage
+- `src/pages/running/Running.tsx` — Running mileage page (goal progress, stats, chart, activity table)
+- `src/pages/running/Races.tsx` — Race list page (upcoming/past sections)
+- `src/pages/running/RaceModal.tsx` — Race create/edit modal (presets, time input, activity linking)
 
 ### API Endpoints (Netlify Functions)
 
@@ -111,10 +120,14 @@ When Neon Auth is fixed, remove `BYPASS_AUTH` from env vars and the bypass logic
 - `goals-tags.ts` — Tags CRUD (scoped to categories)
 - `goals-follow-ups.ts` — Follow-ups list
 - `goals-attachments.ts` / `goals-upload.ts` — File attachments via Netlify Blobs
+- `running-activities.ts` — Running activities (read-only, list/stats/get, data from Strava webhook)
+- `running-races.ts` — Races CRUD (name, date, distance, goal/actual time, linked activity)
+- `strava-webhook.ts` — Strava webhook (subscription verify + activity create/update/delete)
+- `strava-auth.ts` — One-time Strava OAuth bootstrap (authorize + callback)
 
 ### Database Schema (`db/schema/`)
 
-One file per table: `weight-entries`, `weeks` (UUID PK + label), `tasks` (UUID weekId FK), `backlog-items`, `notes`, `recurring-tasks`, `categories`, `tags`, `follow-ups`, `attachments`, `approved-users`, `user-profiles`
+One file per table: `weight-entries`, `weeks` (UUID PK + label), `tasks` (UUID weekId FK), `backlog-items`, `notes`, `recurring-tasks`, `categories`, `tags`, `follow-ups`, `attachments`, `approved-users`, `user-profiles`, `strava-tokens`, `running-activities`, `races`
 
 **Weeks architecture:** Weeks use UUID primary keys internally. The `label` column (e.g., `2026-08`) is the user-facing identifier used in URLs and API lookups. Dates (startDate, endDate) are user-settable, not derived from the label. Overlap validation prevents conflicting date ranges.
 
@@ -129,7 +142,7 @@ One file per table: `weight-entries`, `weeks` (UUID PK + label), `tasks` (UUID w
 - Netlify Functions in `netlify/functions/`, shared helpers in `_shared/`
 - API endpoints use flat naming: `health-sync.ts`, `goals-weeks.ts`
 - Path alias `@/` maps to `src/`
-- Auth: All routes protected via Neon Auth except `POST /api/health-sync` (API key auth via `HEALTH_SYNC_API_KEY`) and `/api/assistant/*` (API key auth via `ASSISTANT_API_KEY`)
+- Auth: All routes protected via Neon Auth except `POST /api/health-sync` (API key auth via `HEALTH_SYNC_API_KEY`), `/api/assistant/*` (API key auth via `ASSISTANT_API_KEY`), and `/api/strava-webhook` (Strava verify token)
 - Dark mode: Layout shell (sidebar, header, main container) has dark classes; page content does not yet
 - Page titles set via `usePageTitle` hook in each page component
 

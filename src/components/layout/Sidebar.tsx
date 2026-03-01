@@ -7,6 +7,8 @@ import {
   ListTodo,
   RotateCcw,
   FolderOpen,
+  Footprints,
+  Trophy,
 } from 'lucide-react'
 
 interface NavItem {
@@ -26,6 +28,8 @@ const navSections: { label?: string; items: NavItem[] }[] = [
     label: 'vitals',
     items: [
       { to: '/health', label: 'weight', icon: Activity },
+      { to: '/running', label: 'running', icon: Footprints, isActive: (p) => p === '/running' },
+      { to: '/running/races', label: 'races', icon: Trophy, isActive: (p) => p.startsWith('/running/races') },
     ],
   },
   {

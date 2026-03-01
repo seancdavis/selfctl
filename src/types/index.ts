@@ -167,3 +167,44 @@ export interface GenerateWeekPayload {
 }
 
 export type ScoreLevel = 'red' | 'yellow' | 'green' | 'fire'
+
+// --- Running ---
+export interface RunningActivity {
+  id: number
+  stravaActivityId: string
+  name: string
+  distanceMiles: number
+  durationSeconds: number
+  movingTimeSeconds: number
+  paceSecondsPerMile: number
+  elevationGainFeet: number | null
+  activityDate: string
+  stravaType: string
+  createdAt: string
+}
+
+export interface RunningStats {
+  totalMiles: number
+  totalRuns: number
+  avgPace: number
+  avgDistance: number
+  longestRun: number
+  yearMiles: number
+  yearGoal: number
+}
+
+export interface Race {
+  id: number
+  name: string
+  raceDate: string
+  distanceLabel: string
+  distanceMiles: number
+  goalTimeSeconds: number | null
+  actualTimeSeconds: number | null
+  linkedActivityId: number | null
+  linkedActivity?: RunningActivity | null
+  notesMarkdown: string | null
+  notesHtml: string | null
+  createdAt: string
+  updatedAt: string
+}

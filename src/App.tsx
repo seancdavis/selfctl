@@ -17,6 +17,9 @@ import { Recurring } from '@/pages/goals/Recurring'
 import { RecurringTaskModal } from '@/pages/goals/RecurringTaskModal'
 import { Categories } from '@/pages/goals/Categories'
 import { CategoryModal } from '@/pages/goals/CategoryModal'
+import { Running } from '@/pages/running/Running'
+import { Races } from '@/pages/running/Races'
+import { RaceModal } from '@/pages/running/RaceModal'
 import { CategoriesProvider } from '@/contexts/CategoriesContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { weeksApi } from '@/lib/api'
@@ -114,6 +117,11 @@ function AuthenticatedApp() {
           <Route path="/goals/recurring" element={<Recurring />}>
             <Route path="new" element={<RecurringTaskModal />} />
             <Route path=":taskId" element={<RecurringTaskModal />} />
+          </Route>
+          <Route path="/running" element={<Running />} />
+          <Route path="/running/races" element={<Races />}>
+            <Route path="new" element={<RaceModal />} />
+            <Route path=":raceId" element={<RaceModal />} />
           </Route>
           <Route path="/settings/categories" element={<Categories />}>
             <Route path="new" element={<CategoryModal />} />

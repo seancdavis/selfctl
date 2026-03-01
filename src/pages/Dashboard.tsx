@@ -7,13 +7,13 @@ import {
   YAxis,
   Tooltip,
 } from 'recharts'
-import { ArrowRight, Plus, ListTodo, Target, Scale, Activity, RotateCcw } from 'lucide-react'
+import { ArrowRight, Plus, ListTodo, Target, Activity, RotateCcw, Footprints } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
-import { healthApi, weeksApi } from '@/lib/api'
+import { healthApi, weeksApi, runningApi } from '@/lib/api'
 import { formatWeekRange } from '@/lib/dates'
 import { calculatePercentage, getScoreLevel } from '@/lib/scores'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import type { Week, WeightEntry } from '@/types'
+import type { Week, WeightEntry, RunningStats, RunningActivity } from '@/types'
 
 function TerminalProgressBar({ percentage }: { percentage: number }) {
   const total = 20
@@ -244,6 +244,108 @@ function WeightTrendWidget() {
   )
 }
 
+function RunningMileageWidget() {
+  const currentYear = new Date().getFullYear()
+  const { data: stats, loading: statsLoading } = useAsyncData<RunningStats>(
+    () => runningApi.stats(currentYear),
+    [currentYear],
+  )
+  const { data: activities, loading: activitiesLoading } = useAsyncData<RunningActivity[]>(
+    () => runningApi.list(30),
+    [],
+  )
+
+  const loading = statsLoading || activitiesLoading
+
+  if (loading) {
+    return (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest">
+            running::mileage
+          </h3>
+        </div>
+        <div className="flex justify-center py-6">
+          <LoadingSpinner size="sm" />
+        </div>
+      </div>
+    )
+  }
+
+  const yearMiles = stats?.yearMiles ?? 0
+  const yearGoal = stats?.yearGoal ?? 500
+  const yearPct = Math.round((yearMiles / yearGoal) * 100)
+
+  // Build daily mileage sparkline from recent activities
+  const sparklineData = activities
+    ? [...activities]
+        .sort((a, b) => new Date(a.activityDate).getTime() - new Date(b.activityDate).getTime())
+        .map((a) => ({ date: formatDate(a.activityDate), miles: a.distanceMiles }))
+    : []
+
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <StatusDot level={yearPct >= 100 ? 'fire' : yearPct >= 50 ? 'green' : yearPct >= 25 ? 'yellow' : 'red'} />
+          <h3 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest">
+            running::mileage
+          </h3>
+        </div>
+        <Link
+          to="/running"
+          className="text-xs font-mono text-zinc-600 hover:text-zinc-400 inline-flex items-center gap-1 transition-colors"
+        >
+          details <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+
+      <div className="flex items-end gap-3 mb-3">
+        <span className="text-3xl font-mono font-bold text-zinc-100">
+          {yearMiles.toFixed(1)}
+        </span>
+        <span className="text-xs font-mono text-zinc-600 pb-0.5">/ {yearGoal} mi</span>
+        <span className="text-xs font-mono text-emerald-400 pb-0.5">{yearPct}%</span>
+      </div>
+
+      <div className="mb-2">
+        <TerminalProgressBar percentage={Math.min(yearPct, 100)} />
+      </div>
+
+      {sparklineData.length > 0 && (
+        <div className="h-16 mt-3">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={sparklineData}>
+              <YAxis hide domain={[0, 'auto']} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#18181b',
+                  border: '1px solid #3f3f46',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  color: '#a1a1aa',
+                }}
+                itemStyle={{ color: '#34d399' }}
+                labelStyle={{ color: '#71717a' }}
+                formatter={(value: number) => [`${value.toFixed(2)} mi`, 'Miles']}
+              />
+              <Line
+                type="monotone"
+                dataKey="miles"
+                stroke="#34d399"
+                strokeWidth={1.5}
+                dot={false}
+                activeDot={{ r: 2, fill: '#34d399', strokeWidth: 0 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function QuickActions() {
   const actions = [
     {
@@ -287,12 +389,12 @@ function QuickActions() {
       border: 'hover:border-amber-400/30',
     },
     {
-      label: 'scale',
-      description: 'Weight tracking',
-      to: '/health',
-      icon: Scale,
-      accent: 'text-orange-400',
-      border: 'hover:border-orange-400/30',
+      label: 'running',
+      description: 'Mileage tracker',
+      to: '/running',
+      icon: Footprints,
+      accent: 'text-cyan-400',
+      border: 'hover:border-cyan-400/30',
     },
   ]
 
@@ -338,6 +440,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <WeekProgressWidget />
         <WeightTrendWidget />
+        <RunningMileageWidget />
         <QuickActions />
       </div>
     </div>
