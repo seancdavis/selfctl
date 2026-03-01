@@ -40,5 +40,4 @@ CREATE TABLE "races" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "tasks" ADD COLUMN "skipped" boolean DEFAULT false NOT NULL;--> statement-breakpoint
 ALTER TABLE "races" ADD CONSTRAINT "races_linked_activity_id_running_activities_id_fk" FOREIGN KEY ("linked_activity_id") REFERENCES "public"."running_activities"("id") ON DELETE set null ON UPDATE no action;
