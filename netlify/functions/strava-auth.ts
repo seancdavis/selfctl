@@ -1,25 +1,30 @@
 import type { Config, Context } from '@netlify/functions'
 import { db, schema } from './_shared/db.js'
-import { requireAuth } from './_shared/auth.js'
 import { json, error } from './_shared/response.js'
-import { eq } from 'drizzle-orm'
 
 export default async (req: Request, context: Context) => {
   if (req.method !== 'GET') {
     return new Response('Method not allowed', { status: 405 })
   }
 
-  const auth = await requireAuth(req)
-  if (!auth.authenticated) {
-    return error('Unauthorized', 401)
-  }
-
   const url = new URL(req.url)
   const pathSegments = url.pathname.split('/').filter(Boolean)
   const lastSegment = pathSegments[pathSegments.length - 1]
 
+  // Callback doesn't need key check — Strava redirects without it
+  // and the code exchange itself validates the request
+  const isCallback = lastSegment === 'callback'
+
+  // Protect the initial auth URL with a key query param
+  if (!isCallback) {
+    const key = url.searchParams.get('key')
+    if (!key || key !== process.env.STRAVA_VERIFY_TOKEN) {
+      return error('Unauthorized', 401)
+    }
+  }
+
   // GET /api/strava-auth/callback — exchange code for tokens
-  if (lastSegment === 'callback') {
+  if (isCallback) {
     const code = url.searchParams.get('code')
     if (!code) {
       return error('Missing authorization code')
