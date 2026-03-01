@@ -1,7 +1,6 @@
 import type { Config } from '@netlify/functions'
 import { db, schema } from './_shared/db.js'
 import { json, error, methodNotAllowed } from './_shared/response.js'
-import { requireAuth } from './_shared/auth.js'
 import {
   getValidToken,
   metersToMiles,
@@ -18,12 +17,11 @@ export default async (req: Request) => {
     return methodNotAllowed()
   }
 
-  const auth = await requireAuth(req)
-  if (!auth.authenticated) {
+  const url = new URL(req.url)
+  const key = url.searchParams.get('key')
+  if (!key || key !== process.env.STRAVA_VERIFY_TOKEN) {
     return error('Unauthorized', 401)
   }
-
-  const url = new URL(req.url)
   const year = parseInt(url.searchParams.get('year') || String(new Date().getFullYear()), 10)
   const after = Math.floor(new Date(year, 0, 1).getTime() / 1000)
   const before = Math.floor(new Date(year + 1, 0, 1).getTime() / 1000)
