@@ -34,7 +34,6 @@ export function RaceModal() {
   const { refetch, races, setRaces } = useOutletContext<OutletContext>()
 
   const isEdit = Boolean(raceId)
-  const raceIdNum = raceId ? Number(raceId) : 0
   const [loading, setLoading] = useState(isEdit)
   const [name, setName] = useState('')
   const [raceDate, setRaceDate] = useState('')
@@ -164,8 +163,6 @@ export function RaceModal() {
       toast.error('failed to delete race')
     }
   }
-
-  const currentPreset = RACE_PRESETS.find((p) => p.label === distanceLabel)
 
   return (
     <Modal isOpen onClose={close} title={isEdit ? 'edit race' : 'new race'}>

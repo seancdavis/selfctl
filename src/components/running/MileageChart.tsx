@@ -49,7 +49,7 @@ export function MileageChart({ data }: MileageChartProps) {
               }}
               itemStyle={{ color: '#34d399' }}
               labelStyle={{ color: '#71717a' }}
-              formatter={(value: number) => [`${value.toFixed(2)} mi`, 'Miles']}
+              formatter={(value) => [`${Number(value ?? 0).toFixed(2)} mi`, 'Miles']}
             />
             <Bar dataKey="miles" fill="#34d399" radius={[2, 2, 0, 0]} />
           </BarChart>

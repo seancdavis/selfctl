@@ -5,7 +5,6 @@ import { runningApi } from '@/lib/api'
 import { formatPace, formatDuration, formatDistance } from '@/lib/running-stats'
 import { StatCard } from '@/components/health/StatCard'
 import { MileageChart } from '@/components/running/MileageChart'
-import { LoadingSpinner } from '@/components/LoadingSpinner'
 import type { RunningActivity, RunningStats as RunningStatsType } from '@/types'
 
 const TIME_PERIODS = [
@@ -31,18 +30,7 @@ function TerminalProgressBar({ percentage }: { percentage: number }) {
 }
 
 function getISOWeekLabel(date: Date): string {
-  const d = new Date(date.valueOf())
-  const dayNum = (d.getDay() + 6) % 7
-  d.setDate(d.getDate() - dayNum + 3)
-  const firstThursday = d.valueOf()
-  d.setMonth(0, 1)
-  if (d.getDay() !== 4) {
-    d.setMonth(0, 1 + ((4 - d.getDay() + 7) % 7))
-  }
-  const weekNum = 1 + Math.ceil((firstThursday - d.valueOf()) / 604800000)
-  const year = new Date(firstThursday).getFullYear()
-
-  // Get the Monday of this week for the label
+  const dayNum = (date.getDay() + 6) % 7
   const monday = new Date(date.valueOf())
   monday.setDate(monday.getDate() - dayNum)
   return monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
