@@ -29,6 +29,56 @@ function TerminalProgressBar({ percentage }: { percentage: number }) {
   )
 }
 
+function getProjectedMiles(yearGoal: number): number {
+  const now = new Date()
+  const yearStart = new Date(now.getFullYear(), 0, 1)
+  const yearEnd = new Date(now.getFullYear() + 1, 0, 1)
+  const totalDays = (yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)
+  const elapsed = (now.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)
+  return Math.round((yearGoal * elapsed / totalDays) * 10) / 10
+}
+
+function GoalProgressTracker({ yearMiles, yearGoal }: { yearMiles: number; yearGoal: number }) {
+  const currentYear = new Date().getFullYear()
+  const projected = getProjectedMiles(yearGoal)
+  const delta = Math.round((yearMiles - projected) * 10) / 10
+  const yearPct = Math.round((yearMiles / yearGoal) * 100)
+
+  const deltaColor = delta > 1 ? 'text-emerald-400' : delta < -1 ? 'text-red-400' : 'text-zinc-400'
+  const deltaBgColor = delta > 1 ? 'bg-emerald-400/10 border-emerald-400/20' : delta < -1 ? 'bg-red-400/10 border-red-400/20' : 'bg-zinc-400/10 border-zinc-400/20'
+  const deltaSign = delta > 0 ? '+' : ''
+
+  return (
+    <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
+      <h3 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest mb-3">
+        {currentYear} goal
+      </h3>
+      <div className="flex items-end gap-3 mb-2">
+        <span className="text-3xl font-mono font-bold text-zinc-100">
+          {yearMiles.toFixed(1)}
+        </span>
+        <span className="text-sm font-mono text-zinc-600 pb-0.5">
+          / {yearGoal} mi
+        </span>
+        <span className="text-sm font-mono text-emerald-400 pb-0.5">{yearPct}%</span>
+      </div>
+      <div className="mb-3">
+        <TerminalProgressBar percentage={yearPct} />
+      </div>
+      <div className="flex items-center gap-3 pt-2 border-t border-zinc-800">
+        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded border ${deltaBgColor}`}>
+          <span className={`text-sm font-mono font-bold ${deltaColor}`}>
+            {deltaSign}{delta} mi
+          </span>
+        </div>
+        <span className="text-xs font-mono text-zinc-600">
+          vs projected {projected.toFixed(1)} mi
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function getISOWeekLabel(date: Date): string {
   const dayNum = (date.getDay() + 6) % 7
   const monday = new Date(date.valueOf())
@@ -131,8 +181,6 @@ export function Running() {
     [activities],
   )
 
-  const yearPct = stats ? Math.round((stats.yearMiles / stats.yearGoal) * 100) : 0
-
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -165,42 +213,14 @@ export function Running() {
         ) : !activities || activities.length === 0 ? (
           <>
             {stats && (
-              <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
-                <h3 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest mb-3">
-                  {currentYear} goal
-                </h3>
-                <div className="flex items-end gap-3 mb-2">
-                  <span className="text-3xl font-mono font-bold text-zinc-100">
-                    {stats.yearMiles.toFixed(1)}
-                  </span>
-                  <span className="text-sm font-mono text-zinc-600 pb-0.5">
-                    / {stats.yearGoal} mi
-                  </span>
-                  <span className="text-sm font-mono text-emerald-400 pb-0.5">{yearPct}%</span>
-                </div>
-                <TerminalProgressBar percentage={yearPct} />
-              </div>
+              <GoalProgressTracker yearMiles={stats.yearMiles} yearGoal={stats.yearGoal} />
             )}
             <EmptyState />
           </>
         ) : (
           <>
             {stats && (
-              <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
-                <h3 className="text-[11px] font-mono font-medium text-zinc-500 uppercase tracking-widest mb-3">
-                  {currentYear} goal
-                </h3>
-                <div className="flex items-end gap-3 mb-2">
-                  <span className="text-3xl font-mono font-bold text-zinc-100">
-                    {stats.yearMiles.toFixed(1)}
-                  </span>
-                  <span className="text-sm font-mono text-zinc-600 pb-0.5">
-                    / {stats.yearGoal} mi
-                  </span>
-                  <span className="text-sm font-mono text-emerald-400 pb-0.5">{yearPct}%</span>
-                </div>
-                <TerminalProgressBar percentage={yearPct} />
-              </div>
+              <GoalProgressTracker yearMiles={stats.yearMiles} yearGoal={stats.yearGoal} />
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

@@ -1,11 +1,12 @@
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
+  Area,
+  ComposedChart,
 } from 'recharts'
 
 interface ChartEntry {
@@ -25,7 +26,13 @@ export function MileageChart({ data }: MileageChartProps) {
       </h3>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
+          <ComposedChart data={data}>
+            <defs>
+              <linearGradient id="mileageGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#34d399" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
             <XAxis
               dataKey="label"
@@ -51,8 +58,21 @@ export function MileageChart({ data }: MileageChartProps) {
               labelStyle={{ color: '#71717a' }}
               formatter={(value) => [`${Number(value ?? 0).toFixed(2)} mi`, 'Miles']}
             />
-            <Bar dataKey="miles" fill="#34d399" radius={[2, 2, 0, 0]} />
-          </BarChart>
+            <Area
+              type="monotone"
+              dataKey="miles"
+              fill="url(#mileageGradient)"
+              stroke="none"
+            />
+            <Line
+              type="monotone"
+              dataKey="miles"
+              stroke="#34d399"
+              strokeWidth={2}
+              dot={{ r: 3, fill: '#18181b', stroke: '#34d399', strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: '#34d399', stroke: '#18181b', strokeWidth: 2 }}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>
