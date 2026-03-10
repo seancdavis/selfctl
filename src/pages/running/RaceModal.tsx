@@ -293,7 +293,7 @@ export function RaceModal() {
 
             <AutoResizeTextarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={setNotes}
               placeholder="notes (markdown, optional)"
               minRows={3}
               className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
@@ -315,6 +315,7 @@ export function RaceModal() {
                 <button
                   type="button"
                   onClick={close}
+                  tabIndex={-1}
                   className="px-3 py-1.5 text-xs font-mono text-zinc-500 hover:text-zinc-300 transition-colors"
                 >
                   cancel
