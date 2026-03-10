@@ -172,7 +172,13 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
                   <>
                     <AutoResizeTextarea
                       value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
+                      onChange={setEditContent}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault()
+                          handleSaveEdit()
+                        }
+                      }}
                       minRows={2}
                       className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
                     />
@@ -180,6 +186,7 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
                       <button
                         onClick={handleCancelEdit}
                         disabled={savingNote}
+                        tabIndex={-1}
                         className="px-3 py-1 text-xs font-mono text-zinc-400 border border-zinc-700 rounded hover:bg-zinc-800 disabled:opacity-40 transition-colors"
                       >
                         cancel
@@ -279,7 +286,7 @@ export function NotesSection({ notes, notesLoading, refetchNotes, taskId, backlo
       <form onSubmit={handleAddNote} className="mt-4">
         <AutoResizeTextarea
           value={noteContent}
-          onChange={(e) => setNoteContent(e.target.value)}
+          onChange={setNoteContent}
           placeholder="add a note (markdown supported)..."
           minRows={2}
           className="w-full px-3 py-2 border border-zinc-700 bg-zinc-900 rounded text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"

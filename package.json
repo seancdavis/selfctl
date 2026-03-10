@@ -23,6 +23,7 @@
     "@neondatabase/serverless": "^1.0.2",
     "@neondatabase/toolkit": "^0.1.2",
     "@netlify/neon": "^0.1.2",
+    "@rocktree/ash": "^0.1.0",
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.563.0",
     "marked": "^17.0.2",
