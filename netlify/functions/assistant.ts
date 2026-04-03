@@ -4,6 +4,7 @@ import { db, schema } from './_shared/db.js'
 import { json, error, notFound, methodNotAllowed } from './_shared/response.js'
 import { renderMarkdown } from './_shared/markdown.js'
 import { validateApiKey } from './_shared/webhook-auth.js'
+import { validateTags } from './_shared/validate-tags.js'
 
 async function updateWeekStats(weekId: string) {
   const weekTasks = await db
@@ -165,6 +166,13 @@ export default async (req: Request, context: Context) => {
       return error('title is required')
     }
 
+    // Validate tags if provided — tags must already exist in the category
+    const tags = body.tags || []
+    if (tags.length > 0) {
+      const tagError = await validateTags(tags, body.categoryId || null)
+      if (tagError) return error(tagError)
+    }
+
     const contentHtml = body.contentMarkdown
       ? await renderMarkdown(body.contentMarkdown)
       : null
@@ -176,7 +184,7 @@ export default async (req: Request, context: Context) => {
         categoryId: body.categoryId || null,
         contentMarkdown: body.contentMarkdown || null,
         contentHtml,
-        tags: body.tags || [],
+        tags,
         priority: 0,
       })
       .returning()

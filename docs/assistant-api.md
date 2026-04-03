@@ -108,7 +108,11 @@ Creates a new backlog item.
 
 Only `title` is required. All other fields are optional.
 
+**Tag validation:** Tags must already exist in the specified category before they can be applied. Create tags first via `POST /api/goals-tags` with `{ "name": "tag-name", "categoryId": N }`. Passing tags that don't exist in the category will return a `400` error.
+
 **Response (201):** The created backlog item object.
+
+**Response (400):** Invalid tags (tags not found in category).
 
 ```bash
 curl -X POST \

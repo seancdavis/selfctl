@@ -120,6 +120,12 @@ export const tagsApi = {
     request<Tag>('/goals-tags', { method: 'POST', body: JSON.stringify(data) }),
   delete: (id: number) =>
     request<void>(`/goals-tags/${id}`, { method: 'DELETE' }),
+  listOrphaned: () => request<string[]>('/goals-tags?orphaned=true'),
+  deleteOrphaned: (tagName: string) =>
+    request<void>('/goals-tags/orphaned', {
+      method: 'DELETE',
+      body: JSON.stringify({ tagName }),
+    }),
 }
 
 // Recurring Tasks API

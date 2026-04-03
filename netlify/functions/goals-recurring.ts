@@ -4,6 +4,7 @@ import { db, schema } from './_shared/db.js'
 import { json, error, notFound, methodNotAllowed } from './_shared/response.js'
 import { renderMarkdown } from './_shared/markdown.js'
 import { requireAuth } from './_shared/auth.js'
+import { validateTags } from './_shared/validate-tags.js'
 import { logger } from './_shared/logger.js'
 
 const log = logger('RECURRING')
@@ -89,8 +90,26 @@ export default async (req: Request, context: Context) => {
 
         if (body.title !== undefined) updates.title = body.title
         if (body.categoryId !== undefined) updates.categoryId = body.categoryId
-        if (body.tags !== undefined) updates.tags = body.tags
         if (body.isActive !== undefined) updates.isActive = body.isActive
+
+        // If category changed and tags not explicitly provided, clear tags
+        const categoryChanged =
+          body.categoryId !== undefined &&
+          body.categoryId !== existing.categoryId
+        if (categoryChanged && body.tags === undefined) {
+          updates.tags = []
+        }
+
+        // Validate tags if provided
+        if (body.tags !== undefined) {
+          const effectiveCategoryId =
+            body.categoryId !== undefined
+              ? body.categoryId
+              : existing.categoryId
+          const tagError = await validateTags(body.tags, effectiveCategoryId)
+          if (tagError) return error(tagError)
+          updates.tags = body.tags
+        }
         if (body.contentMarkdown !== undefined) {
           updates.contentMarkdown = body.contentMarkdown
           updates.contentHtml = body.contentMarkdown
@@ -163,6 +182,13 @@ export default async (req: Request, context: Context) => {
     }
 
     try {
+      // Validate tags if provided
+      const tags = body.tags || []
+      if (tags.length > 0) {
+        const tagError = await validateTags(tags, body.categoryId || null)
+        if (tagError) return error(tagError)
+      }
+
       const contentHtml = body.contentMarkdown
         ? await renderMarkdown(body.contentMarkdown)
         : null
@@ -174,7 +200,7 @@ export default async (req: Request, context: Context) => {
           categoryId: body.categoryId || null,
           contentMarkdown: body.contentMarkdown || null,
           contentHtml,
-          tags: body.tags || [],
+          tags,
         })
         .returning()
 
