@@ -250,6 +250,7 @@ export default async (req: Request, context: Context) => {
               contentMarkdown: item.contentMarkdown,
               contentHtml: item.contentHtml,
               tags: item.tags ?? [],
+              previousVersionId: item.sourceTaskId ?? undefined,
             })
             .returning()
           createdTasks.push(task)

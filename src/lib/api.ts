@@ -99,6 +99,8 @@ export const tasksApi = {
     request<Task>(`/goals-tasks/${id}/skip`, { method: 'POST' }),
   moveToBacklog: (id: number) =>
     request<BacklogItem>(`/goals-tasks/${id}/to-backlog`, { method: 'POST' }),
+  copyToBacklog: (id: number) =>
+    request<BacklogItem>(`/goals-tasks/${id}/copy-to-backlog`, { method: 'POST' }),
 }
 
 // Categories API

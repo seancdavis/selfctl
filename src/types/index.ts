@@ -67,6 +67,7 @@ export interface Task {
 export interface TaskWithCategory extends Task {
   category: Category | null
   noteCount: number
+  previousVersion?: TaskLink | null
 }
 
 export interface RecurringTask {
@@ -109,8 +110,15 @@ export interface BacklogItem {
   contentHtml: string | null
   tags: string[]
   priority: number
+  sourceTaskId: number | null
   createdAt: string
   updatedAt: string
+}
+
+export interface TaskLink {
+  id: number
+  title: string
+  weekLabel: string
 }
 
 export interface Tag {

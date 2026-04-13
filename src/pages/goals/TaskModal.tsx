@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
-import { Trash2 } from 'lucide-react'
+import { useParams, useNavigate, useOutletContext, Link } from 'react-router-dom'
+import { Trash2, Copy } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { AutoResizeTextarea } from '@/components/ui/AutoResizeTextarea'
 import { NotesSection } from '@/components/goals/NotesSection'
@@ -11,7 +11,7 @@ import { useAsyncData } from '@/hooks/useAsyncData'
 import { tasksApi, notesApi } from '@/lib/api'
 import { getStalenessDescription, getStalenessClasses } from '@/lib/scores'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import type { TaskWithCategory, Note } from '@/types'
+import type { TaskWithCategory, Note, TaskLink } from '@/types'
 import type { Dispatch, SetStateAction } from 'react'
 
 interface OutletContext {
@@ -40,6 +40,8 @@ export function TaskModal() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [togglingStatus, setTogglingStatus] = useState(false)
   const [togglingSkip, setTogglingSkip] = useState(false)
+  const [copyingToBacklog, setCopyingToBacklog] = useState(false)
+  const [previousVersion, setPreviousVersion] = useState<TaskLink | null>(null)
 
   const {
     data: notes,
@@ -59,6 +61,7 @@ export function TaskModal() {
       setCategoryId(t.categoryId ? String(t.categoryId) : '')
       setContent(t.contentMarkdown ?? '')
       setSelectedTags(t.tags ?? [])
+      setPreviousVersion(t.previousVersion ?? null)
       setLoading(false)
     }).catch(() => {
       toast.error('failed to load task')
@@ -160,6 +163,19 @@ export function TaskModal() {
     }
   }
 
+  const handleCopyToBacklog = async () => {
+    if (!task) return
+    setCopyingToBacklog(true)
+    try {
+      await tasksApi.copyToBacklog(task.id)
+      toast.success('copied to backlog')
+    } catch {
+      toast.error('failed to copy to backlog')
+    } finally {
+      setCopyingToBacklog(false)
+    }
+  }
+
   return (
     <Modal
       isOpen
@@ -195,6 +211,20 @@ export function TaskModal() {
                 <span className="text-[10px] font-mono bg-zinc-800 text-zinc-500 border border-zinc-700 px-2 py-0.5 rounded">
                   recurring
                 </span>
+              )}
+            </div>
+          )}
+          {isEdit && previousVersion && (
+            <div className="mb-4 px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded text-xs font-mono text-zinc-400">
+              continued from{' '}
+              <Link
+                to={`/goals/weekly/${previousVersion.weekLabel}`}
+                className="text-emerald-400 hover:text-emerald-300 transition-colors"
+              >
+                Week {previousVersion.weekLabel}
+              </Link>
+              {previousVersion.title !== title && (
+                <span className="text-zinc-500"> &mdash; {previousVersion.title}</span>
               )}
             </div>
           )}
@@ -267,6 +297,14 @@ export function TaskModal() {
                         : task.skipped
                         ? 'unskip'
                         : 'skip'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyToBacklog}
+                      disabled={copyingToBacklog}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-zinc-400 hover:text-blue-400 transition-colors disabled:opacity-40"
+                    >
+                      <Copy className="w-3.5 h-3.5" /> {copyingToBacklog ? 'copying...' : 'copy to backlog'}
                     </button>
                     <button
                       type="button"
