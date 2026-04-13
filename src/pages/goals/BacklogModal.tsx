@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
+import { useParams, useNavigate, useOutletContext, Link } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { AutoResizeTextarea } from '@/components/ui/AutoResizeTextarea'
@@ -10,7 +10,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { backlogApi, notesApi, weeksApi } from '@/lib/api'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import type { BacklogItem, Note, Week } from '@/types'
+import type { BacklogItem, Note, Week, TaskLink } from '@/types'
 import type { Dispatch, SetStateAction } from 'react'
 
 interface OutletContext {
@@ -39,6 +39,7 @@ export function BacklogModal() {
   const [showMoveToWeek, setShowMoveToWeek] = useState(false)
   const [selectedWeekId, setSelectedWeekId] = useState('')
   const [moving, setMoving] = useState(false)
+  const [sourceTask, setSourceTask] = useState<TaskLink | null>(null)
 
   const { data: weeks } = useAsyncData<Week[]>(() => weeksApi.list(), [])
 
@@ -57,12 +58,13 @@ export function BacklogModal() {
   useEffect(() => {
     if (!itemId) return
 
-    backlogApi.get(Number(itemId)).then((b) => {
+    backlogApi.get(Number(itemId)).then((b: BacklogItem & { sourceTask?: TaskLink | null }) => {
       setItem(b)
       setTitle(b.title)
       setCategoryId(b.categoryId ? String(b.categoryId) : '')
       setContent(b.contentMarkdown ?? '')
       setSelectedTags(b.tags ?? [])
+      setSourceTask(b.sourceTask ?? null)
       setLoading(false)
     }).catch(() => {
       toast.error('failed to load item')
@@ -147,6 +149,20 @@ export function BacklogModal() {
         </div>
       ) : (
         <>
+          {isEdit && sourceTask && (
+            <div className="mb-4 px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded text-xs font-mono text-zinc-400">
+              copied from{' '}
+              <Link
+                to={`/goals/weekly/${sourceTask.weekLabel}`}
+                className="text-emerald-400 hover:text-emerald-300 transition-colors"
+              >
+                Week {sourceTask.weekLabel}
+              </Link>
+              {sourceTask.title !== title && (
+                <span className="text-zinc-500"> &mdash; {sourceTask.title}</span>
+              )}
+            </div>
+          )}
           <form onSubmit={handleSave} className="space-y-3">
             <input
               type="text"

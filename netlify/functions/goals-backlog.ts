@@ -74,6 +74,7 @@ export default async (req: Request, context: Context) => {
           contentMarkdown: item.contentMarkdown,
           contentHtml: item.contentHtml,
           tags: item.tags ?? [],
+          previousVersionId: item.sourceTaskId ?? undefined,
         })
         .returning()
 
@@ -129,7 +130,29 @@ export default async (req: Request, context: Context) => {
 
       if (!result) return notFound('Backlog item not found')
 
-      return json({ ...result.backlogItem, category: result.category })
+      // Include source task info if this item was copied from a task
+      let sourceTask: { id: number; title: string; weekLabel: string } | null = null
+      if (result.backlogItem.sourceTaskId) {
+        const [src] = await db
+          .select({
+            task: schema.tasks,
+            week: schema.weeks,
+          })
+          .from(schema.tasks)
+          .leftJoin(schema.weeks, eq(schema.tasks.weekId, schema.weeks.id))
+          .where(eq(schema.tasks.id, result.backlogItem.sourceTaskId))
+          .limit(1)
+
+        if (src?.week) {
+          sourceTask = {
+            id: src.task.id,
+            title: src.task.title,
+            weekLabel: src.week.label,
+          }
+        }
+      }
+
+      return json({ ...result.backlogItem, category: result.category, sourceTask })
     }
 
     // PATCH /api/goals-backlog/:id

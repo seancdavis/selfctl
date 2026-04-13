@@ -1,0 +1,2 @@
+ALTER TABLE "backlog_items" ADD COLUMN "source_task_id" integer;--> statement-breakpoint
+ALTER TABLE "backlog_items" ADD CONSTRAINT "backlog_items_source_task_id_tasks_id_fk" FOREIGN KEY ("source_task_id") REFERENCES "public"."tasks"("id") ON DELETE set null ON UPDATE no action;

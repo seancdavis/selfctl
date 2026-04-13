@@ -1,6 +1,6 @@
 {
-  "id": "8e36756b-773b-4360-a182-5a4852faec12",
-  "prevId": "5899141b-73d1-4e86-8e1a-a90b2c1e8c88",
+  "id": "d9b297f4-bf99-459d-88bb-aa84371d4786",
+  "prevId": "1cba4836-15c8-4345-979d-2298ae62ba8b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -709,6 +709,12 @@
           "notNull": true,
           "default": 0
         },
+        "source_task_id": {
+          "name": "source_task_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -732,6 +738,19 @@
           "tableTo": "categories",
           "columnsFrom": [
             "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "backlog_items_source_task_id_tasks_id_fk": {
+          "name": "backlog_items_source_task_id_tasks_id_fk",
+          "tableFrom": "backlog_items",
+          "tableTo": "tasks",
+          "columnsFrom": [
+            "source_task_id"
           ],
           "columnsTo": [
             "id"

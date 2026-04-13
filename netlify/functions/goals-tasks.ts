@@ -141,6 +141,49 @@ export default async (req: Request, context: Context) => {
       return json(backlogItem, 201)
     }
 
+    // POST /api/goals-tasks/:id/copy-to-backlog
+    if (lastSegment === 'copy-to-backlog') {
+      if (req.method !== 'POST') return methodNotAllowed()
+
+      const [task] = await db
+        .select()
+        .from(schema.tasks)
+        .where(eq(schema.tasks.id, taskId))
+        .limit(1)
+
+      if (!task) return notFound('Task not found')
+
+      // Create backlog item from task (task is NOT deleted)
+      const [backlogItem] = await db
+        .insert(schema.backlogItems)
+        .values({
+          categoryId: task.categoryId,
+          title: task.title,
+          contentMarkdown: task.contentMarkdown,
+          contentHtml: task.contentHtml,
+          tags: task.tags ?? [],
+          priority: 0,
+          sourceTaskId: task.id,
+        })
+        .returning()
+
+      // Copy notes from task to backlog item
+      const taskNotes = await db
+        .select()
+        .from(schema.notes)
+        .where(eq(schema.notes.taskId, taskId))
+
+      for (const note of taskNotes) {
+        await db.insert(schema.notes).values({
+          backlogItemId: backlogItem.id,
+          contentMarkdown: note.contentMarkdown,
+          contentHtml: note.contentHtml,
+        })
+      }
+
+      return json(backlogItem, 201)
+    }
+
     // GET /api/goals-tasks/:id
     if (req.method === 'GET') {
       const [result] = await db
@@ -158,7 +201,29 @@ export default async (req: Request, context: Context) => {
 
       if (!result) return notFound('Task not found')
 
-      return json({ ...result.task, category: result.category })
+      // Include previous version info if this task was carried over
+      let previousVersion: { id: number; title: string; weekLabel: string } | null = null
+      if (result.task.previousVersionId) {
+        const [prev] = await db
+          .select({
+            task: schema.tasks,
+            week: schema.weeks,
+          })
+          .from(schema.tasks)
+          .leftJoin(schema.weeks, eq(schema.tasks.weekId, schema.weeks.id))
+          .where(eq(schema.tasks.id, result.task.previousVersionId))
+          .limit(1)
+
+        if (prev?.week) {
+          previousVersion = {
+            id: prev.task.id,
+            title: prev.task.title,
+            weekLabel: prev.week.label,
+          }
+        }
+      }
+
+      return json({ ...result.task, category: result.category, previousVersion })
     }
 
     // PATCH /api/goals-tasks/:id
@@ -350,6 +415,7 @@ export const config: Config = {
     '/api/goals-tasks/:id/toggle',
     '/api/goals-tasks/:id/skip',
     '/api/goals-tasks/:id/to-backlog',
+    '/api/goals-tasks/:id/copy-to-backlog',
     '/api/goals-tasks/:taskId/notes',
   ],
 }
