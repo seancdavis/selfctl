@@ -187,9 +187,58 @@ _TBD: merging to main, production provisioning, confirming data landed intact._
 
 _TBD: remove `@netlify/neon`, delete now-unused migration scripts, update `CLAUDE.md`._
 
+## Phase 4 — Migration runner sorts lexicographically, not by journal order
+
+The first time we pushed the branch, the preview build failed with:
+
+```
+Database migration failed: error running migrations: running migrations: ERROR 1771681020_solid_timeslip.sql: failed to run SQL
+```
+
+The file itself is fine — one clean `ALTER TABLE "tasks" ADD COLUMN "skipped" ...` statement. The problem is **apply order**.
+
+Netlify's migration runner sorts migration files **lexicographically by filename**. The skill even states this explicitly ("Files are applied lexicographically, so always configure timestamp prefixes"). But a project whose history has mixed prefixes — for example, an older run of migrations written with `prefix: 'unix'` and a newer run with `prefix: 'timestamp'` — puts the 10-digit unix names **before** the 14-digit timestamp names lexicographically, even though the unix files were generated later chronologically:
+
+```
+1771681020_solid_timeslip.sql      <- applied first (wrong)
+1772373023_bent_captain_america.sql
+1776100778_cooing_echo.sql
+20260214140526_clean_blue_shield.sql  <- creates the `tasks` table, applied later (wrong)
+...
+```
+
+`1771681020_solid_timeslip.sql` runs before `20260214140526_clean_blue_shield.sql` (which creates the `tasks` table), so the `ALTER TABLE` hits a table that doesn't exist yet.
+
+This does **not** surface locally with `drizzle-kit migrate` because Drizzle applies migrations in `idx` order from `_journal.json`, not by filename. So a divergence between Drizzle Kit's runner and Netlify's migration runner is possible on any project whose filenames don't sort into the same order as the journal.
+
+### Fix
+
+Rename the offending files to timestamp prefixes that preserve the intended apply order, and update `_journal.json` so its `tag` values still match. The `when` values are already authoritative unix-millis timestamps, so they can drive the rename — no guessing:
+
+```bash
+# Each tag in _journal.json has a `when` (ms). Convert and rename.
+# Example for when=1771681020596:
+date -u -r 1771681020 +%Y%m%d%H%M%S   # -> 20260221133700
+git mv netlify/db/migrations/1771681020_solid_timeslip.sql \
+       netlify/db/migrations/20260221133700_solid_timeslip.sql
+git mv netlify/db/migrations/meta/1771681020_snapshot.json \
+       netlify/db/migrations/meta/20260221133700_snapshot.json
+# ...and patch the tag in _journal.json.
+```
+
+The snapshot `id` / `prevId` chain stays intact — those are UUIDs, not derived from filenames.
+
+### Guide checklist for anyone migrating
+
+Before pushing the migration branch, verify that **the lexicographic sort of `netlify/db/migrations/*.sql` matches the `idx` order in `_journal.json`**. If not, rename before pushing. This is the single most effective pre-flight check.
+
 ## Rough edges encountered
 
-_(Running log — each item here should end up reflected in the relevant phase above.)_
+_(Running log.)_
 
-- `pg_dump` 18 meta-commands break naive replay — strip `\restrict` / `\unrestrict`.
-- Neon Auth tables (`neon_auth.*`) live in the same database but do not belong in the new application DB. Filter by schema.
+- `pg_dump` 18 emits `\restrict` / `\unrestrict` psql meta-commands — strip before replay.
+- Neon Auth tables (`neon_auth.*`) live in the same database but do not belong in the new application DB — filter by `--schema=public`.
+- `@netlify/database@0.6.x` does not export `withNetlifyDatabase` or a `/drizzle` subpath despite the skill showing those imports. Wire Drizzle manually.
+- Mixed migration prefixes (unix + timestamp) break the snapshot chain and break Netlify's lexicographic apply order — rename to unified timestamp prefixes before the first migration deploy.
+- Tables containing secrets/PII must be excluded from the dump and restored out-of-band.
+- Production data should never land in git. The migration runner's "DML migration" pattern is good for small committed data (lookup tables, seeds) but not for real customer/user data.
