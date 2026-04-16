@@ -146,15 +146,15 @@ Run this against the **preview** DB first. Use that run as your dry rehearsal �
 
 ### Handling rows with secrets or PII
 
-Exclude them from the dump rather than importing and rotating. Common offenders in a Netlify project: OAuth token tables (Strava, GitHub, etc.), API key stores, webhook secrets.
+Because the dump only ever flows operator-shell → target DB — never into source control, a pastebin, or chat — tables containing credentials (OAuth tokens, API keys, webhook secrets) are fine to include. They never land anywhere they weren't already.
 
-For `pg_dump`:
+**Exclude a table from the dump only if the dump will be committed or shared.** In that case, exclude at dump time and restore the rows out-of-band (rerun the OAuth bootstrap, regenerate the key, etc.):
 
 ```bash
 pg_dump ... --exclude-table=public.strava_tokens "$PROD_URL" > tmp/prod-data.sql
 ```
 
-Restore those rows out-of-band after cutover — typically by rerunning whatever OAuth bootstrap flow created them in the first place.
+If the dump stays in `tmp/` (gitignored) and is piped directly into `psql`, no exclusion is needed.
 
 ### Rough edge: broken snapshot chain from mixed-prefix history
 
