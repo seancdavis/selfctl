@@ -11,8 +11,7 @@
     "preview": "vite preview",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "netlify dev:exec drizzle-kit migrate",
-    "db:migrate:staging": "node scripts/migrate.js staging",
-    "db:migrate:prod": "node scripts/migrate.js production",
+    "db:push": "netlify dev:exec drizzle-kit push",
     "db:studio": "netlify dev:exec drizzle-kit studio"
   },
   "dependencies": {
@@ -20,9 +19,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@neondatabase/neon-js": "^0.1.0-beta.22",
-    "@neondatabase/serverless": "^1.0.2",
-    "@neondatabase/toolkit": "^0.1.2",
-    "@netlify/neon": "^0.1.2",
+    "@netlify/database": "^0.6.1",
     "@rocktree/ash": "^0.1.0",
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.563.0",
